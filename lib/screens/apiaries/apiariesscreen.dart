@@ -57,6 +57,11 @@ class _ApiariesScreenState extends State<ApiariesScreen> {
                                     shadowColor: Colors.grey,
                                     child: Container(
                                       child: ListTile(
+                                        onTap: () {
+                                          index == 0
+                                              ? showModal()
+                                              : print('sahs');
+                                        },
                                         trailing: Icon(
                                           Icons.arrow_right,
                                           color: Colors.cyan,
@@ -84,5 +89,48 @@ class _ApiariesScreenState extends State<ApiariesScreen> {
         ],
       ),
     );
+  }
+
+  showModal() {
+    return showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: new Icon(
+                  Icons.select_all_outlined,
+                  color: Colors.green,
+                ),
+                title: new Text('Select The Type Of Inspection'),
+              ),
+              ListTile(
+                leading: new Icon(
+                  Icons.arrow_right,
+                  color: Colors.green,
+                ),
+                title: new Text('Apiaries inspections'),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Navigator.pushNamed(
+                  //   context,
+                  //   InspectionJobs.routeName,
+                  // );
+                },
+              ),
+              ListTile(
+                leading: new Icon(
+                  Icons.arrow_right,
+                  color: Colors.green,
+                ),
+                title: new Text('Other Inspections'),
+                onTap: () {
+                  // Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        });
   }
 }

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:honeytrackapp/services/size_config.dart';
 
+import 'package:rflutter_alert/rflutter_alert.dart';
+
 const kPrimaryColor = Color(0xFFFCB43A);
-const kPrimaryLightColor = Color(0xFFFFECDF);
+const kPrimaryLightColor = Color(0xFF0C9869);
+const String baseUrl = "http://mis.tfs.go.tz/honey-traceability";
 // const kPrimaryGradientColor = LinearGradient(
 //   begin: Alignment.topLeft,
 //   end: Alignment.bottomRight,
@@ -48,4 +51,23 @@ OutlineInputBorder outlineInputBorder() {
     borderRadius: BorderRadius.circular(getProportionateScreenWidth(15)),
     borderSide: BorderSide(color: kTextColor),
   );
+}
+
+message(context) {
+  return Alert(
+    context: context,
+    type: AlertType.success,
+    title: "Information",
+    desc: "Successfull Saved Data To Local Storage",
+    buttons: [
+      DialogButton(
+        child: Text(
+          "Ok",
+          style: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+        onPressed: () => Navigator.pop(context),
+        width: 120,
+      )
+    ],
+  ).show();
 }

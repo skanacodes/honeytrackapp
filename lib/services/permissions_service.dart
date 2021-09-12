@@ -1,22 +1,22 @@
-// import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-// class PermissionsService {
-//   final PermissionHandler permissionHandler = PermissionHandler();
+class PermissionsService {
+  checkPermission() async {
+    // You can request multiple permissions at once.
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.camera,
+      //add more permission to request here.
+    ].request();
 
-//   Future<bool> _requestPermission(
-//       PermissionGroup permission1, PermissionGroup permission2) async {
-//     var result =
-//         await permissionHandler.requestPermissions([permission1, permission2]);
-//     if (result[permission1] == PermissionStatus.granted) {
-//       return true;
-//     }
-//     if (result[permission2] == PermissionStatus.granted) {
-//       return true;
-//     }
-//     return false;
-//   }
+    if (statuses[Permission.location]!.isDenied) {
+      //check each permission status after.
+      print("Location permission is denied.");
+    }
 
-//   Future<bool> requestCameraandlocationPermission() async {
-//     return _requestPermission(PermissionGroup.camera, PermissionGroup.location);
-//   }
-// }
+    if (statuses[Permission.camera]!.isDenied) {
+      //check each permission status after.
+      print("Camera permission is denied.");
+    }
+  }
+}

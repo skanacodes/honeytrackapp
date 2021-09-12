@@ -1,23 +1,40 @@
 // import 'package:fremisAppV2/screens/RejectedTp/rejectedTpScreen.dart';
 // import 'package:fremisAppV2/screens/statistics/statisticsScreen.dart';
 // import 'package:fremisAppV2/screens/verifiedTpScreen/verifiedTpScreen.dart';
+import 'package:badges/badges.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:honeytrackapp/screens/apiaries/apiariesscreen.dart';
+import 'package:honeytrackapp/providers/db_provider.dart';
+
+import 'package:honeytrackapp/screens/apiaries/jobScreen.dart';
+
+import 'package:honeytrackapp/screens/beeProduct/permitList.dart';
+import 'package:honeytrackapp/services/constants.dart';
+
+import 'package:honeytrackapp/services/usermodel.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 //import 'package:fremisAppV2/screens/verification/verificationScreen.dart';
-import 'package:honeytrackapp/services/constants.dart';
+//import 'package:honeytrackapp/services/constants.dart';
 import 'package:honeytrackapp/services/size_config.dart';
 
 class DashboardUiComponents extends StatefulWidget {
   final String role;
-  DashboardUiComponents({required this.role});
+  final String id;
+  final String dealers;
+  final String apiaries;
+  DashboardUiComponents(
+      {required this.role,
+      required this.apiaries,
+      required this.id,
+      required this.dealers});
   @override
   _DashboardUiComponentsState createState() => _DashboardUiComponentsState();
 }
 
 class _DashboardUiComponentsState extends State<DashboardUiComponents> {
+  int numbers = 0;
+  List? data1;
   Widget gridTile(String title, SvgPicture icon) {
     return Container(
       height: getProportionateScreenHeight(50),
@@ -34,7 +51,34 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          icon,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Badge(
+                  badgeColor: kPrimaryLightColor,
+                  animationType: BadgeAnimationType.slide,
+                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  badgeContent: Padding(
+                    padding: const EdgeInsets.all(1.0),
+                    child: Text(
+                      title == "Tasks"
+                          ? numbers.toString()
+                          : title == 'Apiaries'
+                              ? widget.apiaries.toString()
+                              : title == "Bee Keepers"
+                                  ? widget.dealers.toString()
+                                  : '0',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  child: icon,
+                ),
+              )
+            ],
+          ),
+          //icon,
           Text(
             title,
             style: TextStyle(
@@ -47,12 +91,30 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
     );
   }
 
+  getNumber() async {
+    // var stats = await DBProvider.db.getstats();
+
+    // data1 = stats.toList();
+    print(widget.dealers.toString() + "reerh");
+    int? num1 = await DBProvider.db.countTasks(widget.id);
+    setState(() {
+      numbers = num1!;
+    });
+  }
+
+  @override
+  void initState() {
+    this.getNumber();
+    // ignore: todo
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    var args = ModalRoute.of(context)!.settings.arguments as User;
     return Container(
-      height: widget.role == 'FSUHQ' || widget.role == 'FSUZone'
-          ? getProportionateScreenHeight(200)
-          : getProportionateScreenHeight(300),
+      height: getProportionateScreenHeight(300),
       width: getProportionateScreenWidth(350),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
@@ -85,10 +147,24 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                 children: [
                   InkWell(
                     onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        ApiariesScreen.routeName,
-                      );
+                      Navigator.pushNamed(context, JobScreen.routeName,
+                          arguments: args.id);
+                    },
+                    child: gridTile(
+                      'Tasks',
+                      SvgPicture.asset(
+                        "assets/icons/Bill Icon.svg",
+                        height: 6.h,
+                        width: 6.w,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      // Navigator.pushNamed(
+                      //   context,
+                      //   ApiariesScreen.routeName,
+                      // );
                     },
                     child: gridTile(
                       'Apiaries',
@@ -101,19 +177,13 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                   ),
                   InkWell(
                     onTap: () {
-                      // widget.role == 'FSUHQ' || widget.role == 'FSUZone'
-                      //     ? null
-                      //     : Navigator.pushNamed(
-                      //         context,
-                      //         VerifiedTpScreen.routeName,
-                      //       );
+                      Navigator.pushNamed(context, PermittList.routeName,
+                          arguments: args.id);
                     },
                     child: gridTile(
-                      widget.role == 'FSUHQ' || widget.role == 'FSUZone'
-                          ? 'Beekepers'
-                          : 'Beekepers',
+                      'Permit Management',
                       SvgPicture.asset(
-                        "assets/icons/beekeeper.svg",
+                        "assets/icons/kyc.svg",
                         height: 6.h,
                         width: 6.w,
                       ),
@@ -127,27 +197,9 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                             //     arguments: widget.role);
                           },
                           child: gridTile(
-                            'Dealers',
+                            'Bee Keepers',
                             SvgPicture.asset(
-                              "assets/icons/authorized-dealers.svg",
-                              height: 6.h,
-                              width: 6.w,
-                            ),
-                          ),
-                        ),
-                  widget.role == 'FSUHQ' || widget.role == 'FSUZone'
-                      ? Container()
-                      : InkWell(
-                          onTap: () {
-                            // Navigator.pushNamed(
-                            //   context,
-                            //   StatisticsScreen.routeName,
-                            // );
-                          },
-                          child: gridTile(
-                            'Statistics',
-                            SvgPicture.asset(
-                              "assets/icons/statistics.svg",
+                              "assets/icons/beekeeper.svg",
                               height: 6.h,
                               width: 6.w,
                             ),

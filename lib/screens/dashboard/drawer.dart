@@ -1,3 +1,4 @@
+import 'package:honeytrackapp/screens/dataupload/dataupload.dart';
 import 'package:honeytrackapp/services/constants.dart';
 import 'package:honeytrackapp/services/size_config.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,10 @@ class CustomDrawer extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.of(context).pop();
+                  Navigator.pushNamed(
+                    context,
+                    UploadData.routeName,
+                  );
                 }),
             Container(
               height: getProportionateScreenHeight(2),
@@ -77,9 +82,9 @@ class CustomDrawer extends StatelessWidget {
                 color: Colors.black,
               ),
               onTap: () {
-                SharedPreferences.getInstance().then((prefs) {
-                  prefs.clear();
-                });
+                // SharedPreferences.getInstance().then((prefs) {
+                //   prefs.clear();
+                // });
                 Navigator.of(context).pushNamedAndRemoveUntil(
                     '/login', (Route<dynamic> route) => false);
               },

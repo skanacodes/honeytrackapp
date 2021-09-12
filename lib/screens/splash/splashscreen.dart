@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:honeytrackapp/screens/login/login.dart';
 import 'package:honeytrackapp/services/constants.dart';
+
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 //import 'package:TaxCollection/screens/login/login.dart';
 // import 'package:honeytrackapp/screens/login/login.dart';
@@ -21,7 +23,27 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    Timer(Duration(seconds: 10), () {
+    Timer(Duration(seconds: 10), () async {
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.location,
+        Permission.camera,
+        Permission.storage,
+        Permission.photos,
+        Permission.accessMediaLocation,
+
+        Permission.manageExternalStorage
+        //add more permission to request here.
+      ].request();
+
+      if (statuses[Permission.location]!.isDenied) {
+        //check each permission status after.
+        print("Location permission is denied.");
+      }
+
+      if (statuses[Permission.camera]!.isDenied) {
+        //check each permission status after.
+        print("Camera permission is denied.");
+      }
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => LoginScreen()));
       // SharedPreferences.getInstance().then((prefs) {
