@@ -19,10 +19,10 @@ class StatisticsApiProvider {
       print(res['dealers']);
       print(res['transitPass']);
       var resul = {
-        "apiaries": 20,
-        "beekeepers": 239,
-        "dealers": 34,
-        "transitPass": 78
+        "apiaries": res['apiaries'],
+        "beekeepers": res['beekeepers'],
+        "dealers": res['dealers'],
+        "transitPass": res['transitPass']
       };
       print(resul);
       if (response.statusCode == 200) {

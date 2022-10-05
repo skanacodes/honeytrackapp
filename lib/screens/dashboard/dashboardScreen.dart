@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:honeytrackapp/providers/db_provider.dart';
+import 'package:honeytrackapp/screens/dashboard/appBarItem.dart';
 import 'package:honeytrackapp/screens/dashboard/dashboarduicomponents.dart';
 import 'package:honeytrackapp/screens/dashboard/drawer.dart';
+import 'package:honeytrackapp/screens/dashboard/image_slider.dart';
 import 'package:honeytrackapp/services/constants.dart';
 import 'package:honeytrackapp/services/size_config.dart';
 import 'package:honeytrackapp/services/usermodel.dart';
@@ -14,6 +16,7 @@ import 'package:honeytrackapp/services/usermodel.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
 
 class DashboardScreen extends StatefulWidget {
   static String routeName = "/dashboard";
@@ -33,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   String dealer = "0";
   int totalCreatedTp = 0;
   Map<String, double> dataMap = {};
-  Map<dynamic, dynamic> dataMap1 = {};
+  // Map<dynamic, dynamic> dataMap1 = {};
   bool isLoading = false;
   bool isLoadingCharts = false;
   String email = "";
@@ -117,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       dealer = beekeper.toString();
       apiari = stats[0]['apiaries'].toString();
       var transitpass = stats[0]['transitPass'];
-      dataMap1 = stats[0];
+      // dataMap1 = stats[0];
       // print(dealers.toString() + "fdsgdfv");
       dataMap = {
         "beekepers [$apiar]": double.parse(stats[0]['apiaries'].toString()),
@@ -133,14 +136,14 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void initState() {
-    dataMap = {
-      "beekepers ": double.parse('78'),
-      "apiaries ": double.parse('90'),
-      "dealers": double.parse('97'),
-      "transitPass": double.parse('89'),
-    };
+    // dataMap = {
+    //   "beekepers ": double.parse('78'),
+    //   "apiaries ": double.parse('90'),
+    //   "dealers": double.parse('97'),
+    //   "transitPass": double.parse('89'),
+    // };
     // this._initializeTimer();
-    // this.data1();
+    this.data1();
     // ignore: todo
     // TODO: implement initState
     super.initState();
@@ -156,75 +159,79 @@ class _DashboardScreenState extends State<DashboardScreen>
         drawer: CustomDrawer(),
         appBar: AppBar(
           title: Text(
-            'HoneyTrackApp Dashboard',
-            style: TextStyle(color: Colors.black, fontFamily: 'Ubuntu'),
+            '',
+            style: TextStyle(
+                color: Colors.black, fontFamily: 'Ubuntu', fontSize: 13.sp),
           ),
           backgroundColor: kPrimaryColor,
-          actions: [popBar()],
+          actions: [
+            AppBarActionItems(
+              roles: [],
+              username: args.fname + " " + args.lname,
+              station: args.stationName.toString(),
+            )
+          ],
         ),
         body: SingleChildScrollView(
           child: AnimationLimiter(
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.start, children: [
               Container(
-                height: getProportionateScreenHeight(400),
+                height: getProportionateScreenHeight(120),
                 child: Stack(
                   children: [
                     Container(
-                      height: getProportionateScreenHeight(200),
+                      height: getProportionateScreenHeight(70),
                       width: double.infinity,
-                      color: kPrimaryColor,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(15, 20, 10, 0),
-                        child: isLoadingCharts
-                            ? SpinKitCircle(
-                                color: kPrimaryColor,
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Logged In As: ${args.fname} ${args.lname}',
-                                    style: TextStyle(
-                                        color: Colors.black, fontSize: 15),
-                                  ),
-                                  Text(
-                                    'Station Name: ${args.stationName}',
-                                    style: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.black,
-                                        fontSize: 15),
-                                  ),
-                                  // Text(
-                                  //   'Station Name: $checkpointName',
-                                  //   style: TextStyle(
-                                  //       color: Colors.black,
-                                  //       fontSize: 15,
-                                  //       fontStyle: FontStyle.italic),
-                                  // ),
-                                  // Container(
-                                  //   height: getProportionateScreenHeight(100),
-                                  //   width: getProportionateScreenWidth(350),
-                                  //   child: Card(
-                                  //     elevation: 10,
-                                  //     child: Text("Honey Jobs"),
-                                  //   ),
-                                  // )
-                                ],
-                              ),
+                      decoration: BoxDecoration(
+                        color: kPrimaryColor,
                       ),
                     ),
                     Align(
                         alignment: Alignment.bottomCenter,
-                        child: DashboardUiComponents(
-                          role: roles,
-                          apiaries: apiari,
-                          dealers: dealer,
-                          id: args.id,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Card(
+                            elevation: 10,
+                            child: Container(
+                              height: getProportionateScreenHeight(90),
+                              child: ListTile(
+                                tileColor: Colors.white,
+                                leading: const CircleAvatar(
+                                  foregroundColor: Colors.green,
+                                  backgroundColor: Colors.black12,
+                                  child: Icon(Icons.verified_user_rounded),
+                                ),
+                                title: Text(
+                                  'Logged In As: ${args.fname} ${args.lname}',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  'Station Name: ${args.stationName}',
+                                  style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.black,
+                                      fontSize: 15),
+                                ),
+                              ),
+                            ),
+                          ),
                         ))
                   ],
                 ),
               ),
+              ImageSlider(),
+              Align(
+                  alignment: Alignment.bottomCenter,
+                  child: DashboardUiComponents(
+                    role: roles,
+                    apiaries: apiari,
+                    dealers: dealer,
+                    id: args.id,
+                  )),
               Padding(
                 padding: const EdgeInsets.all(2.0),
                 child: Container(

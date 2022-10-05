@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart' as dio;
 
 List<InspectionModal> inspectionModalFromJson(String str) =>
     List<InspectionModal>.from(
@@ -11,6 +13,8 @@ class InspectionModal {
   // int id;
   String inspectionSeason;
   String generalCondition;
+  String apiaryId;
+  String insetingWay;
   String hiveCode;
   String colonizationDate;
   String expectedObservation;
@@ -29,8 +33,10 @@ class InspectionModal {
   InspectionModal(
       {required this.actionsTaken,
       required this.bloomingspecies,
+      required this.insetingWay,
       required this.inspectionSeason,
       required this.specifyExpectedObservation,
+      required this.apiaryId,
       required this.hiveCode,
       required this.expectedHarvest,
       required this.colonizationDate,
@@ -47,42 +53,71 @@ class InspectionModal {
 
   factory InspectionModal.fromJson(Map<String, dynamic> json) =>
       InspectionModal(
-          jobId: json["job_id"],
+          jobId: json["job_id"] == null ? '' : json["job_id"],
           actionsTaken: json["action_taken"],
-          userId: json["user_id"],
+          userId: json["person_id"] == null ? '' : json["person_id"],
           bloomingspecies: json["blooming_species"],
-          inspectionSeason: json["inspection_seasons"],
+          inspectionSeason: json["inspection_seasons"] == null
+              ? ''
+              : json["inspection_seasons"],
           colonizationDate: json["colonization_date"],
-          expectedForHarvest: json["expectedForHarvest"],
-          expectedHarvest: json["expectedHarvest"],
-          expectedObservation: json["expeced_obseravtion"],
+          expectedForHarvest: json["expected_for_harvest"] == null
+              ? ''
+              : json["expected_for_harvest"],
+          apiaryId: json["apiary_id"],
+          expectedHarvest: json["harvest_weight"],
+          expectedObservation: json["expected_observations"],
           generalCondition: json["general_condition"],
           hiveCode: json["hive_code"],
-          specifyActionTaken: json["specifaction"],
-          specifyExpectedObservation: json["specifyObservation"],
+          specifyActionTaken: json["specify_action"],
+          specifyExpectedObservation: json["specify_observation"],
           img1: json["img1"],
           img2: json["img2"],
           uploadStatus: json["upload_status"],
-          apiaryName: json["apiary"]);
+          insetingWay: json["inserting_way"],
+          apiaryName: json["apiary_name"]);
 
   Map<String, dynamic> toJson() => {
         // "id": id,
         "inspection_season": inspectionSeason,
         "general_condition": generalCondition,
-        "hivecode": hiveCode,
+        "hive_code": hiveCode,
         "colonization_date": colonizationDate,
-        "expected_observation": expectedObservation,
+        "expected_observations": expectedObservation,
         "specify_observation": specifyExpectedObservation,
         "action_taken": actionsTaken,
         "specify_action": specifyActionTaken,
         "blooming_species": bloomingspecies,
-        "expectedForHarvest": expectedForHarvest,
-        "expected_harvest": expectedHarvest,
-        "img1": img1,
-        "img2": img2,
+        "expected_for_Harvest": expectedForHarvest,
+        "harvest_weight": expectedHarvest,
+        "img1": base64Encode(File(img1).readAsBytesSync()),
+        "img2": base64Encode(File(img1).readAsBytesSync()),
         "upload_status": uploadStatus,
         "job_id": jobId,
         "person_id": userId,
-        "apiary_name": apiaryName
+        "apiary_id": apiaryId,
+        "apiary_name": apiaryName,
+        "inserting_way": insetingWay
       };
+  // Future<Map<String, dynamic>> toJsons()  => {
+  //       "inspection_season": inspectionSeason,
+  //       "general_condition": generalCondition,
+  //       "hive_code": hiveCode,
+  //       "colonization_date": colonizationDate,
+  //       "expected_observations": expectedObservation,
+  //       "specify_observation": specifyExpectedObservation,
+  //       "action_taken": actionsTaken,
+  //       "specify_action": specifyActionTaken,
+  //       "blooming_species": bloomingspecies,
+  //       "expected_for_Harvest": expectedForHarvest,
+  //       "harvest_weight": expectedHarvest,
+  //       "img1": base64Encode(File(img1).readAsBytes()),
+  //       "img2": base64Encode(File(img2).readAsBytes()),
+  //       "upload_status": uploadStatus,
+  //       "job_id": jobId,
+  //       "person_id": userId,
+  //       "apiary_id": apiaryId,
+  //       "apiary_name": apiaryName,
+  //       "inserting_way": insetingWay
+  //     };
 }

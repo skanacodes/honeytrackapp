@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:honeytrackapp/providers/db_provider.dart';
 import 'package:honeytrackapp/services/constants.dart';
 import 'package:honeytrackapp/services/size_config.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' as math;
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:dio/dio.dart';
@@ -18,31 +23,108 @@ class _UploadDataState extends State<UploadData> {
   bool isUploading = false;
   int total = 1;
   int actual = 0;
+
+  savePlotsToApi() async {
+    var res = await DBProvider.db.getAllTreesDetails();
+    List chckList = res.map((e) => json.encode(e.toJson())).toList();
+    var tokens = await SharedPreferences.getInstance()
+        .then((prefs) => prefs.getString('token'));
+    print(tokens);
+    print(chckList);
+    Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + tokens!
+    };
+    //print(jsonDecode(body));
+    var url = Uri.parse(
+        'https://mis.tfs.go.tz/honey-traceability/api/v1/apiary-inspection/saveAll');
+    try {
+      //print(jsonEncode(chckList));
+      http.Response response = await http.post(
+        url,
+        headers: headers,
+        body: chckList.toString(),
+      );
+
+      if (response.statusCode == 201) {
+        print(response.statusCode);
+      } else {
+        print(response.statusCode);
+        print(jsonDecode(response.body));
+      }
+    } catch (error) {}
+  }
+
   uploadData() async {
-    setState(() {
-      isUploading = !isUploading;
-    });
-    var dio = Dio();
-    var response = await dio.post(
-        'https://mis.tfs.go.tz/honey-traceability/api/v1/login',
-        data: {'email': 'onestpaul8@gmail.com', 'password': '12345678'},
-        onSendProgress: (int sent, int total) {
-      // setState(() {
-      //   uploadMessage = sent.toString();
-      // });
-      print('$sent $total');
-    }, onReceiveProgress: (int actualbite, int totalByte) {
-      var percentage = actualbite / totalByte * 100;
-      print(percentage);
-      setState(() {
-        total = totalByte;
-        actual = actualbite;
-        uploadMessage = 'Uploading.... ${percentage.floor()}%';
+    try {
+      var resp = await DBProvider.db.getAllTreesDetails();
+      List chckList = resp.map((e) => json.encode(e.toJson())).toList();
+      var tokens = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getString('token'));
+      print(tokens);
+      print(chckList);
+      Map<String, String> headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + tokens!
+      };
+      BaseOptions options = new BaseOptions(
+          baseUrl: "$baseUrl",
+          connectTimeout: 50000,
+          receiveTimeout: 50000,
+          headers: headers);
+      var dio = Dio(options);
+
+      var response = await dio.post(
+          'https://mis.tfs.go.tz/honey-traceability/api/v1/apiary-inspection/saveAll',
+          data: chckList, onSendProgress: (int sent, int total) {
+        // setState(() {
+        //   uploadMessage = sent.toString();
+        // });
+        print('$sent $total');
       });
-    });
-    print(response.statusCode);
-    print(response.data);
-    print(response);
+      print(response.statusCode);
+      print(response.statusMessage);
+      var res = response.data;
+      print(res);
+
+      if (response.statusCode == 200) {
+        return 'success';
+      } else {
+        return 'fail';
+      }
+    } on DioError catch (e) {
+      print('dio package');
+      if (DioErrorType.receiveTimeout == e.type ||
+          DioErrorType.connectTimeout == e.type) {
+        // throw Exception('Server Can Not Be Reached');
+        print(e);
+
+        setState(() {});
+        return 'fail';
+      } else if (DioErrorType.response == e.type) {
+        // throw Exception('Server Can Not Be Reached');
+
+        print(e);
+        setState(() {});
+        return 'fail';
+      } else if (DioErrorType.other == e.type) {
+        if (e.message.contains('SocketException')) {
+          print(e);
+          setState(() {});
+          return 'fail';
+        }
+      } else {
+        //  throw Exception('Server Can Not Be Reached');
+
+        // throw Exception('Server Can Not Be Reached');
+        print(e);
+        setState(() {});
+        return 'fail';
+      }
+      return 'fail';
+    }
   }
 
   @override
@@ -116,6 +198,7 @@ class _UploadDataState extends State<UploadData> {
                                 onTap: () async {
                                   print('Progress');
                                   await uploadData();
+                                  //await savePlotsToApi();
                                 },
                                 child: Container(
                                   height: getProportionateScreenHeight(40),

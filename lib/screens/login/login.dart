@@ -67,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     String activities,
     String ids,
     String hiveno,
+    String taskActivityId,
     String role,
   ) async {
     await JobsApiProvider.storeJob(
@@ -77,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       tasktype,
       ids,
       hiveno,
+      taskActivityId,
       role,
     );
   }
@@ -110,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       List output = [
         {
-          'email': email,
+          'email': email.toLowerCase().trim(),
           'id': id,
           'firstName': fname,
           'lastName': lname,
@@ -180,12 +182,14 @@ class _LoginScreenState extends State<LoginScreen> {
               List apiaries = [];
               List hiveNo = [];
               List apiariesId = [];
+              String? taskActivityId;
 
               for (var j = 0; j < tasks[i]["tasks"]["activities"].length; j++) {
                 String? ap;
                 String? ids;
                 String? nohive;
-
+                // int sum = 0;
+                print("Task two");
                 tasks[i]["tasks"]["activities"][j]["apiary"] != null
                     ? ap = tasks[i]["tasks"]["activities"][j]["apiary"]["name"]
                     : ap = '';
@@ -193,16 +197,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? ids = tasks[i]["tasks"]["activities"][j]["apiary"]["id"]
                         .toString()
                     : ids = '';
-                tasks[i]["tasks"]["activities"][j]["apiary"] != null
-                    ? nohive = tasks[i]["tasks"]["activities"][j]["apiary"]
-                            ["size"]
-                        .toString()
-                    : nohive = '';
+                nohive = tasks[i]["tasks"]["activities"][j]["hive_number"]
+                    .toString();
+                taskActivityId =
+                    tasks[i]["tasks"]["activities"][j]["id"].toString();
+                print("Task Three");
+                // sum = sum +
+                //     int.parse(
+                //         tasks[i]["tasks"]["activities"][j]["hive_number"]);
+                //print(sum);
                 apiaries.add(ap);
                 apiariesId.add(ids);
                 hiveNo.add(nohive);
               }
-
+              print(taskActivityId);
               await storeJobs(
                   res['user']['id'].toString(),
                   tasks[i]["tasks"]["id"].toString(),
@@ -211,10 +219,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   apiaries.toString(),
                   apiariesId.toString(),
                   hiveNo.toString(),
+                  taskActivityId!,
                   tasks[i]["roles"]["name"]);
             }
           }
-          //print(res['station']['name']);
+          // print(res['station']['name']);
+          // print(res['user']['first_name']);
+          // print(res['user']['last_name']);
+          // print(res['user']['email']);
+          // print(res['user']['id']);
+          // print(password);
 
           var x = await storetUserDetailsLocaly(
               res['user']['id'],
@@ -224,6 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
               password,
               res['station']['name']);
           print("am Here");
+          print(x);
           await _loadStatsFromApi(res['token']);
           if (x == "success") {
             await createUser(
@@ -387,7 +402,9 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() {
                 data = y;
               });
-              //  print(data);
+              print(y);
+              print(y.toString() + " nfbvhdfbhdfhbfhdhfd");
+              print(data);
               Navigator.pushNamed(context, DashboardScreen.routeName,
                   arguments: user.User(
                       fname: data[0]["firstName"],
@@ -447,7 +464,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Text('v.1.0.0'),
+          Text('v2.0.0+2-updated'),
           Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),

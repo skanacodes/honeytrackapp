@@ -37,16 +37,19 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
   List? data1;
   Widget gridTile(String title, SvgPicture icon) {
     return Container(
-      height: getProportionateScreenHeight(50),
+      height: getProportionateScreenHeight(120),
       width: getProportionateScreenWidth(152),
       decoration: BoxDecoration(
-          //  color: Color(0xFF0C9869),
+          color: Colors.grey[100]!,
           boxShadow: [
             BoxShadow(
-                blurRadius: 2, color: Color(0xfff3f3f4), offset: Offset.zero),
+              color: Colors.grey[400]!,
+              blurRadius: 1,
+              offset: Offset(3, 5), // Shadow position
+            ),
           ],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.cyan)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.black26)),
       child: Center(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -114,8 +117,8 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
   Widget build(BuildContext context) {
     var args = ModalRoute.of(context)!.settings.arguments as User;
     return Container(
-      height: getProportionateScreenHeight(300),
-      width: getProportionateScreenWidth(350),
+      //  height: getProportionateScreenHeight(300),
+      width: getProportionateScreenWidth(400),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
         color: Colors.transparent,
@@ -128,22 +131,21 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: AnimationLimiter(
-          child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 3 / 2,
+          child: Column(
               children: AnimationConfiguration.toStaggeredList(
-                duration: const Duration(milliseconds: 375),
-                childAnimationBuilder: (widget) => SlideAnimation(
-                  delay: const Duration(milliseconds: 375),
-                  curve: Curves.easeOutQuad,
-                  duration: const Duration(milliseconds: 600),
-                  horizontalOffset: 50.0,
-                  child: FadeInAnimation(
-                    child: widget,
-                  ),
-                ),
+            duration: const Duration(milliseconds: 375),
+            childAnimationBuilder: (widget) => SlideAnimation(
+              delay: const Duration(milliseconds: 375),
+              curve: Curves.easeOutQuad,
+              duration: const Duration(milliseconds: 600),
+              horizontalOffset: 50.0,
+              child: FadeInAnimation(
+                child: widget,
+              ),
+            ),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   InkWell(
                     onTap: () {
@@ -175,6 +177,14 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                       ),
                     ),
                   ),
+                ],
+              ),
+              SizedBox(
+                height: getProportionateScreenHeight(10),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
                   InkWell(
                     onTap: () {
                       Navigator.pushNamed(context, PermittList.routeName,
@@ -206,7 +216,9 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                           ),
                         ),
                 ],
-              )),
+              )
+            ],
+          )),
         ),
       ),
     );

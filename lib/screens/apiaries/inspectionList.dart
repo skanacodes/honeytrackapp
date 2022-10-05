@@ -11,8 +11,12 @@ class InspectionList extends StatefulWidget {
   final String jobId;
   final String userId;
   final List apiaries;
+  final String hiveattend;
   InspectionList(
-      {required this.jobId, required this.userId, required this.apiaries});
+      {required this.jobId,
+      required this.userId,
+      required this.apiaries,
+      required this.hiveattend});
   //InspectionList({Key? key}) : super(key: key);
 
   @override
@@ -197,8 +201,8 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title:
-                      new Text('Apiary Name: ' + list![index]["apiary_name"]),
+                  title: new Text(
+                      'Apiary Name: ' + list![index]["apiary_name"].toString()),
                   onTap: () {},
                 ),
                 Divider(
@@ -209,45 +213,10 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title: new Text('Hive-Code: ' + list![index]["hivecode"]),
+                  title: new Text(
+                      'Hive-Code: ' + list![index]["hive_code"].toString()),
                   onTap: () {
                     // Navigator.pop(context);
-                    // Navigator.pushNamed(
-                    //   context,
-                    //   InspectionJobs.routeName,
-                    // );
-                  },
-                ),
-                Divider(
-                  color: Colors.grey,
-                ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('Inspection-Seasons: ' +
-                      list![index]["inspection_season"]),
-                  onTap: () {
-                    // Navigator.pop(context);
-                    // Navigator.pushNamed(
-                    //   context,
-                    //   InspectionJobs.routeName,
-                    // );
-                  },
-                ),
-                Divider(
-                  color: Colors.grey,
-                ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('General-Condition: ' +
-                      list![index]["general_condition"]),
-                  onTap: () {
-                    //   Navigator.pop(context);
                     // Navigator.pushNamed(
                     //   context,
                     //   InspectionJobs.routeName,
@@ -263,7 +232,7 @@ class _InspectionListState extends State<InspectionList> {
                     color: Colors.green,
                   ),
                   title: new Text('Colonization-Date:  ' +
-                      list![index]["colonization_date"]),
+                      list![index]["colonization_date"].toString()),
                   onTap: () {
                     //  Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -281,7 +250,7 @@ class _InspectionListState extends State<InspectionList> {
                     color: Colors.green,
                   ),
                   title: new Text('Expected-Observations: ' +
-                      list![index]["expected_observation"]),
+                      list![index]["expected_observations"].toString()),
                   onTap: () {
                     // Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -298,8 +267,8 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title: new Text(
-                      'Actions-Taken: ' + list![index]["action_taken"]),
+                  title: new Text('Actions-Taken: ' +
+                      list![index]["action_taken"].toString()),
                   onTap: () {
                     //   Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -316,8 +285,8 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title: new Text(
-                      'Blooming-Species: ' + list![index]["blooming_species"]),
+                  title: new Text('Blooming-Species: ' +
+                      list![index]["blooming_species"].toString()),
                   onTap: () {
                     //Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -334,9 +303,10 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title: new Text(list![index]["expectedForHarvest"] == '1'
-                      ? "Expected For Harvest: true"
-                      : "Expected For Harvest: false"),
+                  title: new Text(
+                      list![index]["expected_for_harvest"].toString() == '1'
+                          ? "Expected For Harvest: true"
+                          : "Expected For Harvest: false"),
                   onTap: () {
                     // Navigator.pop(context);
                   },
@@ -349,8 +319,8 @@ class _InspectionListState extends State<InspectionList> {
                     Icons.arrow_right,
                     color: Colors.green,
                   ),
-                  title: new Text(
-                      'Expected-Harvest: ' + list![index]["expected_harvest"]),
+                  title: new Text('Harvest Weight: ' +
+                      list![index]["harvest_weight"].toString()),
                   onTap: () {
                     //Navigator.pop(context);
                     // Navigator.pushNamed(

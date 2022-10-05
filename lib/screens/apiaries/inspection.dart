@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:qrscan/qrscan.dart' as scanner;
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dashed_circle/dashed_circle.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_qr_bar_scanner/qr_bar_scanner_camera.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,12 +34,18 @@ class Inspection extends StatefulWidget {
   final String jobname;
   final List apiaries;
   final List apiaryId;
+  final List apiaryNum;
+  final String hiveattend;
+  final String taskId;
   Inspection(
       {required this.jobId,
       required this.userId,
+      required this.apiaryNum,
       required this.jobname,
       required this.apiaries,
-      required this.apiaryId});
+      required this.apiaryId,
+      required this.hiveattend,
+      required this.taskId});
   // Inspection({Key? key}) : super(key: key);
 
   @override
@@ -56,6 +63,7 @@ class _InspectionState extends State<Inspection> {
   List? _inspectionSeason;
   List? _generalcondition;
   String? result;
+  List<String>? hiveTotal;
   String? dropdownvalue;
   String specifyExpectedObservations = "";
   String specifyActionTaken = "";
@@ -75,8 +83,10 @@ class _InspectionState extends State<Inspection> {
   late PickedFile _imageFile;
   late PickedFile _imageFile1;
   String? uploadStatus;
+  String? bloomingspecies;
   bool isImageTaken = false;
   bool isImageTaken1 = false;
+  int hiveAttended = 0;
   List<String>? apiaryList;
   List<String>? apiaryId;
   final String uploadUrl = 'https://api.imgur.com/3/upload';
@@ -85,7 +95,29 @@ class _InspectionState extends State<Inspection> {
   //DateTime now = DateTime.now();
   String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
   final formKey = new GlobalKey<FormState>();
-  int _radioValue = 0;
+  int _radioValue = 1;
+  String? _qrInfo = 'Scan a QR/Bar code';
+  bool _camState = false;
+
+  _qrCallback(String? code) {
+    setState(() {
+      print(code);
+      _camState = false;
+      _qrInfo = code;
+    });
+  }
+
+  _scanCode() {
+    setState(() {
+      _camState = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _connectivitySubscription.cancel();
+  }
 
   Future<String?> uploadImage(filepath, url) async {
     var request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
@@ -114,43 +146,12 @@ class _InspectionState extends State<Inspection> {
     ).show();
   }
 
-  Future _scanQR() async {
-    try {
-      String? barcodeScanRes = await scanner.scan();
-      // var x = barcodeScanRes == null ? null : barcodeScanRes.substring(11, 19);
-
-      // barcodeScanRes
-      if (barcodeScanRes != null) {
-        setState(() {
-          result = barcodeScanRes.toString();
-        });
-      }
-    } on PlatformException catch (ex) {
-      // print(ex.toString() + "klkjbjhvg");
-
-      if (ex.code == scanner.CameraAccessDenied) {
-        setState(() {});
-        // message(result);
-      } else {
-        print(ex);
-        setState(() {});
-        // message(result);
-      }
-    } on FormatException {
-      setState(() {});
-    } catch (ex) {
-      print(ex);
-      setState(() {});
-      //  message(result);
-    }
-  }
-
   Future<String> uploadData() async {
     try {
       // print("am here");
       var tokens = await SharedPreferences.getInstance()
           .then((prefs) => prefs.getString('token'));
-      print(tokens);
+
       var headers = {"Authorization": "Bearer " + tokens!};
       BaseOptions options = new BaseOptions(
           baseUrl: "$baseUrl",
@@ -159,20 +160,26 @@ class _InspectionState extends State<Inspection> {
           headers: headers);
       var dio = Dio(options);
       var formData = FormData.fromMap({
-        'expected_observations': _expectedObservation,
-        'action_taken': _actionTaken,
-        'blooming_species': 'species',
-        'expected_for_harvest': "true",
-        'harvest_weight': expectedHarvest,
+        'observations': _expectedObservation!.join(","),
+        'action_taken': _actionTaken!.join(","),
+        'blooming_species': bloomingspecies,
+        'other_action_taken': specifyActionTaken.toString(),
+        'other_observations': specifyExpectedObservations.toString(),
+        'expected_harvest_kg': expectedHarvest.toString(),
         'apiary_id': apiaryIds,
-        'inspection_season': _inspectionSeason,
-        'general_condition': _generalcondition,
-        'hive_code': result ?? 'tz/js/7438',
+        'harvest_expected': _radioValue,
+        'task_activity_id': widget.taskId,
+        'is_complete': hiveAttended == int.parse(hiveTotal![0]) ? true : false,
+        'hive_code': _qrInfo,
         'colonization_date': formattedDate,
-        'images': [
+        'images[]': [
           await MultipartFile.fromFile(
             img1,
-            filename: 'image',
+            filename: 'image_one',
+          ),
+          await MultipartFile.fromFile(
+            img2,
+            filename: 'image_two',
           ),
         ]
       });
@@ -190,7 +197,11 @@ class _InspectionState extends State<Inspection> {
       print(res);
 
       if (response.statusCode == 200) {
-        message('success', 'Data Submitted Successfull');
+        if (res["success"]) {
+          message('success', 'Data Submitted Successfull');
+
+          return 'success';
+        }
         return 'success';
       } else {
         message('fail', 'Failed To Save Data');
@@ -341,22 +352,14 @@ class _InspectionState extends State<Inspection> {
       context: context,
       initialDate: DateTime.now(),
       initialDatePickerMode: DatePickerMode.day,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2025),
     );
     print(picked);
     setState(() {
       formattedDate = DateFormat('yyyy-MM-dd').format(picked!);
     });
     return picked;
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is removed
-
-    _connectivitySubscription.cancel();
-    super.dispose();
   }
 
 //  var apir;
@@ -369,12 +372,21 @@ class _InspectionState extends State<Inspection> {
   //   });
   //   // return apir;
   // }
+  count() async {
+    var count = await DBProvider.db.hiveattendedNumber(widget.jobId);
+    setState(() {
+      hiveAttended = int.parse(count);
+      // print(hiveAttended.toString() + "  bqfhhab Hive Attended");
+    });
+  }
 
   getDropdownList() {
     var x = widget.apiaries[0];
     var y = widget.apiaryId[0];
+    var z = widget.apiaryNum[0];
     print(x);
     print(y);
+
     if (x != "") {
       final removedBrackets = x.substring(1, x.length - 1);
       print(removedBrackets);
@@ -393,10 +405,21 @@ class _InspectionState extends State<Inspection> {
         apiaryId = parts;
       });
     }
+    if (z != "") {
+      final removedBracket = z.substring(1, z.length - 1);
+      print(removedBracket);
+      final parts = removedBracket.split(', ');
+
+      setState(() {
+        hiveTotal = parts;
+      });
+      print(hiveTotal);
+    }
   }
 
   @override
   void initState() {
+    count();
     this.getDropdownList();
     initConnectivity();
 
@@ -427,7 +450,7 @@ class _InspectionState extends State<Inspection> {
       text: TextSpan(
           text: 'Fill',
           style: GoogleFonts.portLligatSans(
-            textStyle: Theme.of(context).textTheme.display1,
+            textStyle: Theme.of(context).textTheme.bodyText1,
             fontSize: 15.0.sp,
             fontWeight: FontWeight.w700,
             color: kPrimaryColor,
@@ -455,10 +478,10 @@ class _InspectionState extends State<Inspection> {
     String response = await DBProvider.db.insertSingleApiaryInspection(
         InspectionModal(
             actionsTaken: _actionTaken.toString(),
-            bloomingspecies: "aquire",
+            bloomingspecies: bloomingspecies!.toString(),
             inspectionSeason: _inspectionSeason.toString(),
             specifyExpectedObservation: specifyExpectedObservations,
-            hiveCode: result ?? "ncj783",
+            hiveCode: _qrInfo!,
             expectedHarvest: expectedHarvest,
             colonizationDate: formattedDate,
             expectedObservation: _expectedObservation.toString(),
@@ -470,6 +493,8 @@ class _InspectionState extends State<Inspection> {
             jobId: widget.jobId,
             userId: widget.userId,
             uploadStatus: status,
+            apiaryId: apiaryIds.toString(),
+            insetingWay: '1',
             apiaryName: apiarName!));
     if (response == "Success") {
       return 'success';
@@ -498,6 +523,15 @@ class _InspectionState extends State<Inspection> {
             if (_connectionStatus.toString() == 'ConnectivityResult.none') {
               var response = await saveDataLocally('0');
               if (response == 'success') {
+                setState(() {
+                  hiveAttended++;
+                });
+                var count = await DBProvider.db
+                    .UpdateHiveAttended(widget.jobId, hiveAttended.toString());
+                print(count);
+                setState(() {
+                  hiveAttended = int.parse(count);
+                });
                 message('success', 'Data Stored Locally Successfull');
               } else {
                 message('error', 'Failed To Store Data Locally');
@@ -506,10 +540,29 @@ class _InspectionState extends State<Inspection> {
               var x = await uploadData();
               if (x == 'success') {
                 // message('success', 'Data Submitted Successfull');
+                setState(() {
+                  hiveAttended++;
+                });
+                var count = await DBProvider.db
+                    .UpdateHiveAttended(widget.jobId, hiveAttended.toString());
+                print(count);
+                setState(() {
+                  hiveAttended = int.parse(count);
+                });
+
                 await saveDataLocally('1');
               } else {
                 var response = await saveDataLocally('0');
                 if (response == 'success') {
+                  setState(() {
+                    hiveAttended++;
+                  });
+                  var count = await DBProvider.db.UpdateHiveAttended(
+                      widget.jobId, hiveAttended.toString());
+                  print(count);
+                  setState(() {
+                    hiveAttended = int.parse(count);
+                  });
                   message('success', 'Data Stored Locally Successfull');
                 } else {
                   message('error', 'Failed To Store Data Locally');
@@ -517,7 +570,7 @@ class _InspectionState extends State<Inspection> {
               }
             }
             apiaryList == null ? print('null') : apiaryList!.clear();
-            _generalcondition!.clear();
+
             _expectedObservation!.clear();
             _actionTaken!.clear();
 
@@ -528,6 +581,9 @@ class _InspectionState extends State<Inspection> {
               isLoading = false;
             });
             _formKey.currentState!.reset();
+            hiveAttended > int.parse(hiveTotal![0])
+                ? message("success", "This Task Is Completed SuccessFully")
+                : print("done");
           } else {
             setState(() {
               imageErr = "Please Capture Image";
@@ -594,897 +650,1052 @@ class _InspectionState extends State<Inspection> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          Container(
-            height: getProportionateScreenHeight(700),
-            child: Column(
-              children: <Widget>[
+      child: _camState
+          ? Center(
+              child: SizedBox(
+                height: 600,
+                width: 400,
+                child: QRBarScannerCamera(
+                  onError: (context, error) => Text(
+                    error.toString(),
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  qrCodeCallback: (code) {
+                    _qrCallback(code);
+                  },
+                ),
+              ),
+            )
+          : Column(
+              children: [
                 Container(
-                  height: getProportionateScreenHeight(140),
-                  child: Stack(
-                    children: [
+                  height: getProportionateScreenHeight(700),
+                  child: Column(
+                    children: <Widget>[
                       Container(
-                        width: double.infinity,
-                        height: getProportionateScreenHeight(100),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(100),
-                              bottomRight: Radius.circular(100)),
-                          color: kPrimaryColor,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Card(
-                            elevation: 20,
-                            child: ListTile(
-                                tileColor: Colors.white,
-                                subtitle: Text(DateFormat('yyyy-MM-dd hh:mm:ss')
-                                    .format(DateTime.now())
-                                    .toString()),
-                                title: Text(
-                                  '${widget.jobname}  ',
-                                  style: TextStyle(color: Colors.black),
+                        height: getProportionateScreenHeight(140),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              height: getProportionateScreenHeight(100),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(100),
+                                    bottomRight: Radius.circular(100)),
+                                color: kPrimaryColor,
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Card(
+                                  elevation: 20,
+                                  child: ListTile(
+                                      tileColor: Colors.white,
+                                      subtitle: hiveAttended >
+                                              int.parse(hiveTotal![0])
+                                          ? Text((hiveAttended - 1).toString() +
+                                              " of " +
+                                              hiveTotal![0].toString())
+                                          : Text(hiveAttended.toString() +
+                                              " of " +
+                                              hiveTotal![0].toString()),
+                                      title: Text(
+                                        '${widget.jobname}  ',
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                      leading: CircleAvatar(
+                                        backgroundColor: Colors.pink,
+                                        child: Icon(
+                                          Icons.edit,
+                                          color: Colors.black,
+                                        ),
+                                      )),
                                 ),
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.pink,
-                                  child: Icon(
-                                    Icons.edit,
-                                    color: Colors.black,
-                                  ),
-                                )),
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
+                      // Adding the form here
+                      hiveAttended > int.parse(hiveTotal![0])
+                          ? Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Center(
+                                child: Container(
+                                  child: Card(
+                                      elevation: 10,
+                                      child: ListTile(
+                                        leading: Icon(
+                                          Icons.cloud_done_sharp,
+                                          color: kPrimaryColor,
+                                        ),
+                                        title: Text("The Task Is Completed"),
+                                      )),
+                                ),
+                              ),
+                            )
+                          : Form(
+                              key: _formKey,
+                              child: Expanded(
+                                child: ListView(
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: Card(
+                                        elevation: 10,
+                                        shadowColor: kPrimaryColor,
+                                        child: Column(
+                                          children: <Widget>[
+                                            _title(),
+                                            SizedBox(
+                                              height:
+                                                  getProportionateScreenHeight(
+                                                      10),
+                                            ),
+                                            apiaryList != null
+                                                ? SafeArea(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 1,
+                                                              right: 16,
+                                                              left: 16),
+                                                      child: Container(
+                                                        // width: getProportionateScreenHeight(
+                                                        //     320),
+                                                        child:
+                                                            DropdownButtonFormField<
+                                                                String>(
+                                                          decoration: InputDecoration(
+                                                              isDense: true,
+                                                              enabledBorder: UnderlineInputBorder(
+                                                                  borderSide: BorderSide(
+                                                                      color: Colors
+                                                                          .white)),
+                                                              fillColor: Color(
+                                                                  0xfff3f3f4),
+                                                              filled: true,
+                                                              contentPadding:
+                                                                  EdgeInsets
+                                                                      .fromLTRB(
+                                                                          20,
+                                                                          5.5,
+                                                                          0,
+                                                                          0),
+                                                              labelStyle:
+                                                                  TextStyle(),
+                                                              labelText:
+                                                                  'Select the Apiary'),
+                                                          focusColor:
+                                                              Colors.white,
+                                                          value: apiarName,
+                                                          //elevation: 5,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                          iconEnabledColor:
+                                                              Colors.black,
+                                                          items: apiaryList!.map<
+                                                              DropdownMenuItem<
+                                                                  String>>((String
+                                                              value) {
+                                                            return DropdownMenuItem<
+                                                                String>(
+                                                              value: value,
+                                                              child: Text(
+                                                                value,
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .black),
+                                                              ),
+                                                            );
+                                                          }).toList(),
+
+                                                          onChanged: (value) {
+                                                            FocusScope.of(
+                                                                    context)
+                                                                .requestFocus(
+                                                                    new FocusNode());
+                                                            setState(() {
+                                                              apiarName =
+                                                                  value!;
+                                                              int index =
+                                                                  apiaryList!
+                                                                      .indexOf(
+                                                                          apiarName!);
+                                                              apiaryIds =
+                                                                  apiaryId![
+                                                                          index]
+                                                                      .toString();
+                                                              print(apiaryIds);
+                                                            });
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 10, right: 16, left: 16),
+                                              child: Text(
+                                                "Scan To Capture The Hive Code",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 1, right: 16, left: 16),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    flex: 5,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 1,
+                                                              right: 1,
+                                                              left: 1),
+                                                      child: Container(
+                                                        child: TextFormField(
+                                                          keyboardType:
+                                                              TextInputType
+                                                                  .text,
+                                                          key: Key("plat"),
+                                                          // onSaved: (val) => task.licencePlateNumber = val,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            focusedBorder:
+                                                                OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          5.0),
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color:
+                                                                    Colors.cyan,
+                                                              ),
+                                                            ),
+                                                            fillColor: Color(
+                                                                0xfff3f3f4),
+                                                            filled: true,
+                                                            labelText: _qrInfo !=
+                                                                    null
+                                                                ? _qrInfo
+                                                                : "Hive Code",
+                                                            border: InputBorder
+                                                                .none,
+                                                            isDense: true,
+                                                            contentPadding:
+                                                                EdgeInsets
+                                                                    .fromLTRB(
+                                                                        30,
+                                                                        10,
+                                                                        15,
+                                                                        10),
+                                                          ),
+                                                          enabled: false,
+                                                          // validator: (value) {
+                                                          //   if (value.isEmpty)
+                                                          //     return "This Field Is Required";
+                                                          //   return null;
+                                                          // },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                      flex: 1,
+                                                      child: SizedBox(
+                                                        width: 1,
+                                                      )),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Center(
+                                                        child: InkWell(
+                                                      onTap: () {
+                                                        // _scanQR();
+                                                        _scanCode();
+                                                      },
+                                                      child: DashedCircle(
+                                                        dashes: 6,
+                                                        gapSize: 10.0,
+                                                        child: Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  6.0),
+                                                          child: CircleAvatar(
+                                                            // radius: 70.0,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            foregroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            radius: 16,
+                                                            child: SvgPicture
+                                                                .asset(
+                                                              "assets/icons/qr-code-scan.svg",
+                                                              height: 4.h,
+                                                              width: 4.w,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        color: Colors.green,
+                                                      ),
+                                                    )),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 10, right: 16, left: 16),
+                                              child: Container(
+                                                  child: Card(
+                                                elevation: 1,
+                                                child: ListTile(
+                                                  leading: CircleAvatar(
+                                                    child: Icon(
+                                                        Icons.calendar_today),
+                                                  ),
+                                                  onTap: () {
+                                                    _selectDate(context);
+                                                  },
+                                                  title: Text(
+                                                    'Colonization Date: $formattedDate',
+                                                    style: TextStyle(
+                                                        color: Colors.black54),
+                                                  ),
+                                                ),
+                                              )),
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.all(16),
+                                              child: MultiSelectFormField(
+                                                chipBackGroundColor:
+                                                    Colors.blue,
+                                                chipLabelStyle: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white),
+                                                dialogTextStyle: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                checkBoxActiveColor:
+                                                    Colors.blue,
+                                                checkBoxCheckColor:
+                                                    Colors.white,
+                                                dialogShapeBorder:
+                                                    RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    12.0))),
+                                                title: Text(
+                                                  " Observations",
+                                                  style:
+                                                      TextStyle(fontSize: 16),
+                                                ),
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.length == 0) {
+                                                    return 'Please select one or more options';
+                                                  }
+                                                  return null;
+                                                },
+                                                dataSource: [
+                                                  {
+                                                    "display": "Egg Laying",
+                                                    "value": "Egg Laying",
+                                                  },
+                                                  {
+                                                    "display": "Enemies",
+                                                    "value": "Enemies",
+                                                  },
+                                                  {
+                                                    "display":
+                                                        "Sealed Honey Combs",
+                                                    "value":
+                                                        "Sealed Honey Combs",
+                                                  },
+                                                  {
+                                                    "display": "Brood",
+                                                    "value": "Brood",
+                                                  },
+                                                  {
+                                                    "display": "Strong Colony",
+                                                    "value": "Strong Colony",
+                                                  },
+                                                  {
+                                                    "display": "Weak Colony",
+                                                    "value": "Weak Colony",
+                                                  },
+                                                  {
+                                                    "display":
+                                                        "Presence Of Queen Cells",
+                                                    "value":
+                                                        "Presence Of Queen Cells",
+                                                  },
+                                                  {
+                                                    "display":
+                                                        "Unsealed Honey Combs",
+                                                    "value":
+                                                        "Unsealed Honey Combs",
+                                                  },
+                                                  {
+                                                    "display": "Others",
+                                                    "value": "others",
+                                                  },
+                                                ],
+                                                textField: 'display',
+                                                valueField: 'value',
+                                                okButtonLabel: 'OK',
+                                                cancelButtonLabel: 'CANCEL',
+                                                hintWidget: Text(
+                                                    'Please choose one or more'),
+                                                initialValue:
+                                                    _expectedObservation,
+                                                onSaved: (value) {
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          new FocusNode());
+                                                  if (value == null) return;
+                                                  setState(() {
+                                                    _expectedObservation =
+                                                        value;
+                                                    if (_expectedObservation!
+                                                        .contains("others")) {
+                                                      showExpectedOther = true;
+                                                    } else {
+                                                      showExpectedOther = false;
+                                                    }
+
+                                                    print(_expectedObservation);
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            showExpectedOther
+                                                ? Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 10,
+                                                            right: 16,
+                                                            left: 16),
+                                                    child: Container(
+                                                      child: TextFormField(
+                                                        keyboardType:
+                                                            TextInputType.text,
+                                                        key: Key("specify"),
+                                                        onSaved: (val) =>
+                                                            specifyExpectedObservations =
+                                                                val!,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10.0),
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  Colors.cyan,
+                                                            ),
+                                                          ),
+                                                          fillColor:
+                                                              Color(0xfff3f3f4),
+                                                          filled: true,
+                                                          labelText:
+                                                              "If Other Specify",
+                                                          border:
+                                                              InputBorder.none,
+                                                          isDense: true,
+                                                          contentPadding:
+                                                              EdgeInsets
+                                                                  .fromLTRB(
+                                                                      30,
+                                                                      10,
+                                                                      15,
+                                                                      10),
+                                                        ),
+                                                        // onChanged: (value) {},
+                                                        validator: (value) {
+                                                          if (value!.isEmpty)
+                                                            return "This Field Is Required";
+                                                          return null;
+                                                        },
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            Container(
+                                              padding: EdgeInsets.all(16),
+                                              child: MultiSelectFormField(
+                                                chipBackGroundColor:
+                                                    Colors.blue,
+                                                chipLabelStyle: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white),
+                                                dialogTextStyle: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                checkBoxActiveColor:
+                                                    Colors.blue,
+                                                checkBoxCheckColor:
+                                                    Colors.white,
+                                                dialogShapeBorder:
+                                                    RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    12.0))),
+                                                title: Text(
+                                                  "Actions Taken",
+                                                  style:
+                                                      TextStyle(fontSize: 16),
+                                                ),
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.length == 0) {
+                                                    return 'Please select one or more options';
+                                                  }
+                                                  return null;
+                                                },
+                                                dataSource: [
+                                                  {
+                                                    "display": "Cleaning",
+                                                    "value": "Cleaning",
+                                                  },
+                                                  {
+                                                    "display": "Rebaiting",
+                                                    "value": "Rebaiting",
+                                                  },
+                                                  {
+                                                    "display":
+                                                        "Siting/Resiting",
+                                                    "value": "Siting/Resiting",
+                                                  },
+                                                  {
+                                                    "display": "Slashing",
+                                                    "value": "Slashing",
+                                                  },
+                                                  {
+                                                    "display": "Spot Weeding",
+                                                    "value": "Spot Weeding",
+                                                  },
+                                                  {
+                                                    "display": "Hive Repairing",
+                                                    "value": "Hive Repairing",
+                                                  },
+                                                  {
+                                                    "display": "Colony Uniting",
+                                                    "value": "Colony Uniting",
+                                                  },
+                                                  {
+                                                    "display":
+                                                        "Colony Division",
+                                                    "value": "Colony Division",
+                                                  },
+                                                  {
+                                                    "display": "Queen Rearing",
+                                                    "value": "Queen Rearing",
+                                                  },
+                                                  {
+                                                    "display": "Harvesting",
+                                                    "value": "Harvesting",
+                                                  },
+                                                  {
+                                                    "display": "Others",
+                                                    "value": "others",
+                                                  },
+                                                ],
+                                                textField: 'display',
+                                                valueField: 'value',
+                                                okButtonLabel: 'OK',
+                                                cancelButtonLabel: 'CANCEL',
+                                                hintWidget: Text(
+                                                    'Please choose one or more'),
+                                                initialValue: _actionTaken,
+                                                onSaved: (value) {
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          new FocusNode());
+                                                  if (value == null) return;
+                                                  setState(() {
+                                                    _actionTaken = value;
+                                                    if (_actionTaken!
+                                                        .contains("others")) {
+                                                      showActionOther = true;
+                                                    } else {
+                                                      showActionOther = false;
+                                                    }
+                                                    if (_actionTaken!
+                                                        .contains("Slashing")) {
+                                                      showSlashingKm = true;
+                                                    } else {
+                                                      showSlashingKm = false;
+                                                    }
+                                                    if (_actionTaken!.contains(
+                                                        "Spot Weeding")) {
+                                                      showHivesNumber = true;
+                                                    } else {
+                                                      showHivesNumber = false;
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            showActionOther
+                                                ? Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 10,
+                                                            right: 16,
+                                                            left: 16),
+                                                    child: Container(
+                                                      child: TextFormField(
+                                                        keyboardType:
+                                                            TextInputType.text,
+                                                        key: Key("other"),
+                                                        onSaved: (val) =>
+                                                            specifyActionTaken =
+                                                                val!,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10.0),
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  Colors.cyan,
+                                                            ),
+                                                          ),
+                                                          fillColor:
+                                                              Color(0xfff3f3f4),
+                                                          filled: true,
+                                                          labelText:
+                                                              "If Other Specify",
+                                                          border:
+                                                              InputBorder.none,
+                                                          isDense: true,
+                                                          contentPadding:
+                                                              EdgeInsets
+                                                                  .fromLTRB(
+                                                                      30,
+                                                                      10,
+                                                                      15,
+                                                                      10),
+                                                        ),
+                                                        // validator: (value) {
+                                                        //   if (value.isEmpty)
+                                                        //     return "This Field Is Required";
+                                                        //   return null;
+                                                        // },
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            // showSlashingKm
+                                            //     ? Padding(
+                                            //         padding: const EdgeInsets.only(
+                                            //             top: 10, right: 16, left: 16),
+                                            //         child: Container(
+                                            //           child: TextFormField(
+                                            //             keyboardType:
+                                            //                 TextInputType.number,
+                                            //             key: Key("other"),
+                                            //             onSaved: (val) =>
+                                            //                 kmSlashed = val!,
+                                            //             decoration: InputDecoration(
+                                            //               focusedBorder:
+                                            //                   OutlineInputBorder(
+                                            //                 borderRadius:
+                                            //                     BorderRadius.circular(
+                                            //                         10.0),
+                                            //                 borderSide: BorderSide(
+                                            //                   color: Colors.cyan,
+                                            //                 ),
+                                            //               ),
+                                            //               fillColor:
+                                            //                   Color(0xfff3f3f4),
+                                            //               filled: true,
+                                            //               labelText:
+                                            //                   "Specify km Slashed",
+                                            //               border: InputBorder.none,
+                                            //               isDense: true,
+                                            //               contentPadding:
+                                            //                   EdgeInsets.fromLTRB(
+                                            //                       30, 10, 15, 10),
+                                            //             ),
+                                            //             // validator: (value) {
+                                            //             //   if (value.isEmpty)
+                                            //             //     return "This Field Is Required";
+                                            //             //   return null;
+                                            //             // },
+                                            //           ),
+                                            //         ),
+                                            //       )
+                                            //     : Container(),
+                                            // showSlashingKm
+                                            //     ? Padding(
+                                            //         padding: const EdgeInsets.only(
+                                            //             top: 10, right: 16, left: 16),
+                                            //         child: Container(
+                                            //           child: TextFormField(
+                                            //             keyboardType:
+                                            //                 TextInputType.number,
+                                            //             key: Key("other"),
+                                            //             onSaved: (val) =>
+                                            //                 noOfH = val!,
+                                            //             decoration: InputDecoration(
+                                            //               focusedBorder:
+                                            //                   OutlineInputBorder(
+                                            //                 borderRadius:
+                                            //                     BorderRadius.circular(
+                                            //                         10.0),
+                                            //                 borderSide: BorderSide(
+                                            //                   color: Colors.cyan,
+                                            //                 ),
+                                            //               ),
+                                            //               fillColor:
+                                            //                   Color(0xfff3f3f4),
+                                            //               filled: true,
+                                            //               labelText:
+                                            //                   "No. Of Hives Where Spot Weeded",
+                                            //               border: InputBorder.none,
+                                            //               isDense: true,
+                                            //               contentPadding:
+                                            //                   EdgeInsets.fromLTRB(
+                                            //                       30, 10, 15, 10),
+                                            //             ),
+                                            //             // validator: (value) {
+                                            //             //   if (value.isEmpty)
+                                            //             //     return "This Field Is Required";
+                                            //             //   return null;
+                                            //             // },
+                                            //           ),
+                                            //         ),
+                                            //       )
+                                            //     : Container(),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 10, right: 16, left: 16),
+                                              child: Container(
+                                                child: TextFormField(
+                                                  keyboardType:
+                                                      TextInputType.text,
+                                                  key: Key("Blooming"),
+                                                  onSaved: (val) =>
+                                                      bloomingspecies = val,
+                                                  decoration: InputDecoration(
+                                                    focusedBorder:
+                                                        OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10.0),
+                                                      borderSide: BorderSide(
+                                                        color: Colors.cyan,
+                                                      ),
+                                                    ),
+                                                    fillColor:
+                                                        Color(0xfff3f3f4),
+                                                    filled: true,
+                                                    labelText:
+                                                        "Blooming Species",
+                                                    border: InputBorder.none,
+                                                    isDense: true,
+                                                    contentPadding:
+                                                        EdgeInsets.fromLTRB(
+                                                            30, 10, 15, 10),
+                                                  ),
+                                                  validator: (value) {
+                                                    if (value!.isEmpty)
+                                                      return "This Field Is Required";
+                                                    return null;
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.only(top: 8),
+                                              child:
+                                                  Text("Expected For Harvest?"),
+                                            ),
+                                            Card(
+                                              elevation: 6,
+                                              child: new Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    new Radio(
+                                                      value: 1,
+                                                      groupValue: _radioValue,
+                                                      onChanged: (value) {
+                                                        _handleRadioValueChange(
+                                                            value);
+                                                      },
+                                                    ),
+                                                    new Text(
+                                                      'Yes',
+                                                      style: new TextStyle(
+                                                          fontSize: 16.0),
+                                                    ),
+                                                    new Radio(
+                                                      value: 0,
+                                                      groupValue: _radioValue,
+                                                      onChanged: (value) {
+                                                        _handleRadioValueChange(
+                                                            value);
+                                                      },
+                                                    ),
+                                                    new Text(
+                                                      'No',
+                                                      style: new TextStyle(
+                                                        fontSize: 16.0,
+                                                      ),
+                                                    ),
+                                                  ]),
+                                            ),
+                                            _radioValue == 0
+                                                ? Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 10,
+                                                            right: 16,
+                                                            left: 16),
+                                                    child: Container(
+                                                      child: TextFormField(
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .number,
+                                                        key: Key("other"),
+                                                        onSaved: (val) =>
+                                                            expectedHarvest =
+                                                                val!,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10.0),
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  Colors.cyan,
+                                                            ),
+                                                          ),
+                                                          fillColor:
+                                                              Color(0xfff3f3f4),
+                                                          filled: true,
+                                                          labelText:
+                                                              "Expected Harvest (in Kg)",
+                                                          border:
+                                                              InputBorder.none,
+                                                          isDense: true,
+                                                          contentPadding:
+                                                              EdgeInsets
+                                                                  .fromLTRB(
+                                                                      30,
+                                                                      10,
+                                                                      15,
+                                                                      10),
+                                                        ),
+                                                        // validator: (value) {
+                                                        //   if (value!.isEmpty)
+                                                        //     return "This Field Is Required";
+                                                        //   return null;
+                                                        // },
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            Container(
+                                              width: double.infinity,
+                                              height:
+                                                  getProportionateScreenHeight(
+                                                      60),
+                                              child: Card(
+                                                elevation: 10,
+                                                child: Center(
+                                                  child: Text(
+                                                      "Click On The Icons To Take Atleast Two Pictures"),
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              height:
+                                                  getProportionateScreenHeight(
+                                                      200),
+                                              width: double.infinity,
+                                              child: Row(
+                                                children: [
+                                                  isImageTaken
+                                                      ? Expanded(
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              _pickImage(1);
+                                                            },
+                                                            child: Card(
+                                                              elevation: 10,
+                                                              child: Center(
+                                                                  child:
+                                                                      FutureBuilder<
+                                                                          void>(
+                                                                future: retriveLostData(
+                                                                    _imageFile),
+                                                                builder: (BuildContext
+                                                                        context,
+                                                                    AsyncSnapshot<
+                                                                            void>
+                                                                        snapshot) {
+                                                                  switch (snapshot
+                                                                      .connectionState) {
+                                                                    case ConnectionState
+                                                                        .none:
+                                                                    case ConnectionState
+                                                                        .waiting:
+                                                                      return const Text(
+                                                                          'Picked an image');
+                                                                    case ConnectionState
+                                                                        .done:
+                                                                      return _previewImage(
+                                                                          _imageFile);
+                                                                    default:
+                                                                      return const Text(
+                                                                          'Picked an image');
+                                                                  }
+                                                                },
+                                                              )),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : Expanded(
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              _pickImage(1);
+                                                            },
+                                                            child: Card(
+                                                              elevation: 10,
+                                                              child: SvgPicture
+                                                                  .asset(
+                                                                "assets/icons/addpic.svg",
+                                                                // height: 4.h,
+                                                                // width: 4.w,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  isImageTaken1
+                                                      ? Expanded(
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              _pickImage(2);
+                                                            },
+                                                            child: Card(
+                                                              elevation: 10,
+                                                              child: Center(
+                                                                  child:
+                                                                      FutureBuilder<
+                                                                          void>(
+                                                                future: retriveLostData(
+                                                                    _imageFile1),
+                                                                builder: (BuildContext
+                                                                        context,
+                                                                    AsyncSnapshot<
+                                                                            void>
+                                                                        snapshot) {
+                                                                  switch (snapshot
+                                                                      .connectionState) {
+                                                                    case ConnectionState
+                                                                        .none:
+                                                                    case ConnectionState
+                                                                        .waiting:
+                                                                      return const Text(
+                                                                          'Picked an image');
+                                                                    case ConnectionState
+                                                                        .done:
+                                                                      return _previewImage(
+                                                                          _imageFile1);
+                                                                    default:
+                                                                      return const Text(
+                                                                          'Picked an image');
+                                                                  }
+                                                                },
+                                                              )),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : Expanded(
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              _pickImage(2);
+                                                            },
+                                                            child: Card(
+                                                              elevation: 10,
+                                                              child: SvgPicture
+                                                                  .asset(
+                                                                "assets/icons/addpic.svg",
+                                                                // height: 4.h,
+                                                                // width: 4.w,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        )
+                                                ],
+                                              ),
+                                            ),
+                                            isImageTaken == false ||
+                                                    isImageTaken1 == false
+                                                ? Card(
+                                                    elevation: 10,
+                                                    child: Center(
+                                                      child: Text(
+                                                        imageErr.toString(),
+                                                        style: TextStyle(
+                                                            color: Colors.red),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            SizedBox(
+                                              height:
+                                                  getProportionateScreenHeight(
+                                                      20),
+                                            ),
+                                            _submitButton(),
+                                            SizedBox(
+                                              height:
+                                                  getProportionateScreenHeight(
+                                                      40),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
                     ],
                   ),
                 ),
-                // Adding the form here
-                Form(
-                  key: _formKey,
-                  child: Expanded(
-                    child: ListView(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Card(
-                            elevation: 10,
-                            shadowColor: kPrimaryColor,
-                            child: Column(
-                              children: <Widget>[
-                                _title(),
-                                SizedBox(
-                                  height: getProportionateScreenHeight(10),
-                                ),
-                                apiaryList != null
-                                    ? SafeArea(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 1, right: 16, left: 16),
-                                          child: Container(
-                                            // width: getProportionateScreenHeight(
-                                            //     320),
-                                            child:
-                                                DropdownButtonFormField<String>(
-                                              decoration: InputDecoration(
-                                                  isDense: true,
-                                                  enabledBorder:
-                                                      UnderlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                  color: Colors
-                                                                      .white)),
-                                                  fillColor: Color(0xfff3f3f4),
-                                                  filled: true,
-                                                  contentPadding:
-                                                      EdgeInsets.fromLTRB(
-                                                          20, 5.5, 0, 0),
-                                                  labelStyle: TextStyle(),
-                                                  labelText:
-                                                      'Select the Apiary'),
-                                              focusColor: Colors.white,
-                                              value: apiarName,
-                                              //elevation: 5,
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                              iconEnabledColor: Colors.black,
-                                              items: apiaryList!.map<
-                                                      DropdownMenuItem<String>>(
-                                                  (String value) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(
-                                                    value,
-                                                    style: TextStyle(
-                                                        color: Colors.black),
-                                                  ),
-                                                );
-                                              }).toList(),
-
-                                              onChanged: (value) {
-                                                FocusScope.of(context)
-                                                    .requestFocus(
-                                                        new FocusNode());
-                                                setState(() {
-                                                  apiarName = value!;
-                                                  int index = apiaryList!
-                                                      .indexOf(apiarName!);
-                                                  apiaryIds = apiaryId![index]
-                                                      .toString();
-                                                  print(apiaryIds);
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                Container(
-                                  padding: EdgeInsets.all(16),
-                                  child: MultiSelectFormField(
-                                    autovalidate: false,
-                                    chipBackGroundColor: Colors.blue,
-                                    chipLabelStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                    dialogTextStyle:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                    checkBoxActiveColor: Colors.blue,
-                                    checkBoxCheckColor: Colors.white,
-                                    dialogShapeBorder: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12.0))),
-                                    title: Text(
-                                      "General Condition",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.length == 0) {
-                                        return 'Please select one or more options';
-                                      }
-                                      return null;
-                                    },
-                                    dataSource: [
-                                      {
-                                        "display": "Rainy",
-                                        "value": "Rainy",
-                                      },
-                                      {
-                                        "display": "Sunny",
-                                        "value": "Sunny",
-                                      },
-                                    ],
-                                    textField: 'display',
-                                    valueField: 'value',
-                                    okButtonLabel: 'OK',
-                                    cancelButtonLabel: 'CANCEL',
-                                    hintWidget:
-                                        Text('Please choose one or more'),
-                                    initialValue: _generalcondition,
-                                    onSaved: (value) {
-                                      FocusScope.of(context)
-                                          .requestFocus(new FocusNode());
-                                      if (value == null) return;
-                                      setState(() {
-                                        _generalcondition = value;
-                                        //  print(_generalcondition);
-                                      });
-                                    },
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 10, right: 16, left: 16),
-                                  child: Text(
-                                    "Scan To Capture The Hive Code",
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 1, right: 16, left: 16),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 5,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 1, right: 1, left: 1),
-                                          child: Container(
-                                            child: TextFormField(
-                                              keyboardType: TextInputType.text,
-                                              key: Key("plat"),
-                                              // onSaved: (val) => task.licencePlateNumber = val,
-                                              decoration: InputDecoration(
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          5.0),
-                                                  borderSide: BorderSide(
-                                                    color: Colors.cyan,
-                                                  ),
-                                                ),
-                                                fillColor: Color(0xfff3f3f4),
-                                                filled: true,
-                                                labelText: result != null
-                                                    ? result
-                                                    : "Hive Code",
-                                                border: InputBorder.none,
-                                                isDense: true,
-                                                contentPadding:
-                                                    EdgeInsets.fromLTRB(
-                                                        30, 10, 15, 10),
-                                              ),
-                                              enabled: false,
-                                              // validator: (value) {
-                                              //   if (value.isEmpty)
-                                              //     return "This Field Is Required";
-                                              //   return null;
-                                              // },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                          flex: 1,
-                                          child: SizedBox(
-                                            width: 1,
-                                          )),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Center(
-                                            child: InkWell(
-                                          onTap: () {
-                                            _scanQR();
-                                          },
-                                          child: DashedCircle(
-                                            dashes: 6,
-                                            gapSize: 10.0,
-                                            child: Padding(
-                                              padding: EdgeInsets.all(6.0),
-                                              child: CircleAvatar(
-                                                // radius: 70.0,
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                foregroundColor:
-                                                    Colors.transparent,
-                                                radius: 16,
-                                                child: SvgPicture.asset(
-                                                  "assets/icons/qr-code-scan.svg",
-                                                  height: 4.h,
-                                                  width: 4.w,
-                                                ),
-                                              ),
-                                            ),
-                                            color: Colors.green,
-                                          ),
-                                        )),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 10, right: 16, left: 16),
-                                  child: Container(
-                                      child: Card(
-                                    elevation: 1,
-                                    child: ListTile(
-                                      leading: CircleAvatar(
-                                        child: Icon(Icons.calendar_today),
-                                      ),
-                                      onTap: () {
-                                        _selectDate(context);
-                                      },
-                                      title: Text(
-                                        'Colonization Date: $formattedDate',
-                                        style: TextStyle(color: Colors.black54),
-                                      ),
-                                    ),
-                                  )),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.all(16),
-                                  child: MultiSelectFormField(
-                                    autovalidate: false,
-                                    chipBackGroundColor: Colors.blue,
-                                    chipLabelStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                    dialogTextStyle:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                    checkBoxActiveColor: Colors.blue,
-                                    checkBoxCheckColor: Colors.white,
-                                    dialogShapeBorder: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12.0))),
-                                    title: Text(
-                                      " Observations",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.length == 0) {
-                                        return 'Please select one or more options';
-                                      }
-                                      return null;
-                                    },
-                                    dataSource: [
-                                      {
-                                        "display": "Egg Laying",
-                                        "value": "Egg Laying",
-                                      },
-                                      {
-                                        "display": "Enemies",
-                                        "value": "Enemies",
-                                      },
-                                      {
-                                        "display": "Sealed Honey Combs",
-                                        "value": "Sealed Honey Combs",
-                                      },
-                                      {
-                                        "display": "Brood",
-                                        "value": "Brood",
-                                      },
-                                      {
-                                        "display": "Strong Colony",
-                                        "value": "Strong Colony",
-                                      },
-                                      {
-                                        "display": "Weak Colony",
-                                        "value": "Weak Colony",
-                                      },
-                                      {
-                                        "display": "Presence Of Queen Cells",
-                                        "value": "Presence Of Queen Cells",
-                                      },
-                                      {
-                                        "display": "Unsealed Honey Combs",
-                                        "value": "Unsealed Honey Combs",
-                                      },
-                                      {
-                                        "display": "Others",
-                                        "value": "others",
-                                      },
-                                    ],
-                                    textField: 'display',
-                                    valueField: 'value',
-                                    okButtonLabel: 'OK',
-                                    cancelButtonLabel: 'CANCEL',
-                                    hintWidget:
-                                        Text('Please choose one or more'),
-                                    initialValue: _expectedObservation,
-                                    onSaved: (value) {
-                                      FocusScope.of(context)
-                                          .requestFocus(new FocusNode());
-                                      if (value == null) return;
-                                      setState(() {
-                                        _expectedObservation = value;
-                                        if (_expectedObservation!
-                                            .contains("others")) {
-                                          showExpectedOther = true;
-                                        } else {
-                                          showExpectedOther = false;
-                                        }
-
-                                        print(_expectedObservation);
-                                      });
-                                    },
-                                  ),
-                                ),
-                                showExpectedOther
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 10, right: 16, left: 16),
-                                        child: Container(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.text,
-                                            key: Key("specify"),
-                                            onSaved: (val) =>
-                                                specifyExpectedObservations =
-                                                    val!,
-                                            decoration: InputDecoration(
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                                borderSide: BorderSide(
-                                                  color: Colors.cyan,
-                                                ),
-                                              ),
-                                              fillColor: Color(0xfff3f3f4),
-                                              filled: true,
-                                              labelText: "If Other Specify",
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                      30, 10, 15, 10),
-                                            ),
-                                            // onChanged: (value) {},
-                                            validator: (value) {
-                                              if (value!.isEmpty)
-                                                return "This Field Is Required";
-                                              return null;
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                Container(
-                                  padding: EdgeInsets.all(16),
-                                  child: MultiSelectFormField(
-                                    autovalidate: false,
-                                    chipBackGroundColor: Colors.blue,
-                                    chipLabelStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                    dialogTextStyle:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                    checkBoxActiveColor: Colors.blue,
-                                    checkBoxCheckColor: Colors.white,
-                                    dialogShapeBorder: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12.0))),
-                                    title: Text(
-                                      "Actions Taken",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.length == 0) {
-                                        return 'Please select one or more options';
-                                      }
-                                      return null;
-                                    },
-                                    dataSource: [
-                                      {
-                                        "display": "Cleaning",
-                                        "value": "Cleaning",
-                                      },
-                                      {
-                                        "display": "Rebaiting",
-                                        "value": "Rebaiting",
-                                      },
-                                      {
-                                        "display": "Siting/Resiting",
-                                        "value": "Siting/Resiting",
-                                      },
-                                      {
-                                        "display": "Slashing",
-                                        "value": "Slashing",
-                                      },
-                                      {
-                                        "display": "Spot Weeding",
-                                        "value": "Spot Weeding",
-                                      },
-                                      {
-                                        "display": "Hive Repairing",
-                                        "value": "Hive Repairing",
-                                      },
-                                      {
-                                        "display": "Colony Uniting",
-                                        "value": "Colony Uniting",
-                                      },
-                                      {
-                                        "display": "Colony Division",
-                                        "value": "Colony Division",
-                                      },
-                                      {
-                                        "display": "Queen Rearing",
-                                        "value": "Queen Rearing",
-                                      },
-                                      {
-                                        "display": "Harvesting",
-                                        "value": "Harvesting",
-                                      },
-                                      {
-                                        "display": "Others",
-                                        "value": "others",
-                                      },
-                                    ],
-                                    textField: 'display',
-                                    valueField: 'value',
-                                    okButtonLabel: 'OK',
-                                    cancelButtonLabel: 'CANCEL',
-                                    hintWidget:
-                                        Text('Please choose one or more'),
-                                    initialValue: _actionTaken,
-                                    onSaved: (value) {
-                                      FocusScope.of(context)
-                                          .requestFocus(new FocusNode());
-                                      if (value == null) return;
-                                      setState(() {
-                                        _actionTaken = value;
-                                        if (_actionTaken!.contains("others")) {
-                                          showActionOther = true;
-                                        } else {
-                                          showActionOther = false;
-                                        }
-                                        if (_actionTaken!
-                                            .contains("Slashing")) {
-                                          showSlashingKm = true;
-                                        } else {
-                                          showSlashingKm = false;
-                                        }
-                                        if (_actionTaken!
-                                            .contains("Spot Weeding")) {
-                                          showHivesNumber = true;
-                                        } else {
-                                          showHivesNumber = false;
-                                        }
-                                      });
-                                    },
-                                  ),
-                                ),
-                                showActionOther
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 10, right: 16, left: 16),
-                                        child: Container(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.text,
-                                            key: Key("other"),
-                                            onSaved: (val) =>
-                                                specifyActionTaken = val!,
-                                            decoration: InputDecoration(
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                                borderSide: BorderSide(
-                                                  color: Colors.cyan,
-                                                ),
-                                              ),
-                                              fillColor: Color(0xfff3f3f4),
-                                              filled: true,
-                                              labelText: "If Other Specify",
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                      30, 10, 15, 10),
-                                            ),
-                                            // validator: (value) {
-                                            //   if (value.isEmpty)
-                                            //     return "This Field Is Required";
-                                            //   return null;
-                                            // },
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                showSlashingKm
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 10, right: 16, left: 16),
-                                        child: Container(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            key: Key("other"),
-                                            onSaved: (val) => kmSlashed = val!,
-                                            decoration: InputDecoration(
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                                borderSide: BorderSide(
-                                                  color: Colors.cyan,
-                                                ),
-                                              ),
-                                              fillColor: Color(0xfff3f3f4),
-                                              filled: true,
-                                              labelText: "Specify km Slashed",
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                      30, 10, 15, 10),
-                                            ),
-                                            // validator: (value) {
-                                            //   if (value.isEmpty)
-                                            //     return "This Field Is Required";
-                                            //   return null;
-                                            // },
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                showSlashingKm
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 10, right: 16, left: 16),
-                                        child: Container(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            key: Key("other"),
-                                            onSaved: (val) => noOfH = val!,
-                                            decoration: InputDecoration(
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                                borderSide: BorderSide(
-                                                  color: Colors.cyan,
-                                                ),
-                                              ),
-                                              fillColor: Color(0xfff3f3f4),
-                                              filled: true,
-                                              labelText: "How Many Hives",
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                      30, 10, 15, 10),
-                                            ),
-                                            // validator: (value) {
-                                            //   if (value.isEmpty)
-                                            //     return "This Field Is Required";
-                                            //   return null;
-                                            // },
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 10, right: 16, left: 16),
-                                  child: Container(
-                                    child: TextFormField(
-                                      keyboardType: TextInputType.text,
-                                      key: Key("Blooming"),
-                                      // onSaved: (val) => task.drivername = val,
-                                      decoration: InputDecoration(
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          borderSide: BorderSide(
-                                            color: Colors.cyan,
-                                          ),
-                                        ),
-                                        fillColor: Color(0xfff3f3f4),
-                                        filled: true,
-                                        labelText: "Blooming Species",
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding:
-                                            EdgeInsets.fromLTRB(30, 10, 15, 10),
-                                      ),
-                                      validator: (value) {
-                                        if (value!.isEmpty)
-                                          return "This Field Is Required";
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text("Expected For Harvest?"),
-                                ),
-                                Card(
-                                  elevation: 6,
-                                  child: new Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        new Radio(
-                                          value: 0,
-                                          groupValue: _radioValue,
-                                          onChanged: (value) {
-                                            _handleRadioValueChange(value);
-                                          },
-                                        ),
-                                        new Text(
-                                          'Yes',
-                                          style: new TextStyle(fontSize: 16.0),
-                                        ),
-                                        new Radio(
-                                          value: 1,
-                                          groupValue: _radioValue,
-                                          onChanged: (value) {
-                                            _handleRadioValueChange(value);
-                                          },
-                                        ),
-                                        new Text(
-                                          'No',
-                                          style: new TextStyle(
-                                            fontSize: 16.0,
-                                          ),
-                                        ),
-                                      ]),
-                                ),
-                                _radioValue == 0
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 10, right: 16, left: 16),
-                                        child: Container(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            key: Key("other"),
-                                            onSaved: (val) =>
-                                                expectedHarvest = val!,
-                                            decoration: InputDecoration(
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
-                                                borderSide: BorderSide(
-                                                  color: Colors.cyan,
-                                                ),
-                                              ),
-                                              fillColor: Color(0xfff3f3f4),
-                                              filled: true,
-                                              labelText:
-                                                  "Expected Harvest (in Kg)",
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(
-                                                      30, 10, 15, 10),
-                                            ),
-                                            validator: (value) {
-                                              if (value!.isEmpty)
-                                                return "This Field Is Required";
-                                              return null;
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                Container(
-                                  width: double.infinity,
-                                  height: getProportionateScreenHeight(60),
-                                  child: Card(
-                                    elevation: 10,
-                                    child: Center(
-                                      child: Text(
-                                          "Click On The Icons To Take Atleast Two Pictures"),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  height: getProportionateScreenHeight(200),
-                                  width: double.infinity,
-                                  child: Row(
-                                    children: [
-                                      isImageTaken
-                                          ? Expanded(
-                                              child: InkWell(
-                                                onTap: () {
-                                                  _pickImage(1);
-                                                },
-                                                child: Card(
-                                                  elevation: 10,
-                                                  child: Center(
-                                                      child:
-                                                          FutureBuilder<void>(
-                                                    future: retriveLostData(
-                                                        _imageFile),
-                                                    builder:
-                                                        (BuildContext context,
-                                                            AsyncSnapshot<void>
-                                                                snapshot) {
-                                                      switch (snapshot
-                                                          .connectionState) {
-                                                        case ConnectionState
-                                                            .none:
-                                                        case ConnectionState
-                                                            .waiting:
-                                                          return const Text(
-                                                              'Picked an image');
-                                                        case ConnectionState
-                                                            .done:
-                                                          return _previewImage(
-                                                              _imageFile);
-                                                        default:
-                                                          return const Text(
-                                                              'Picked an image');
-                                                      }
-                                                    },
-                                                  )),
-                                                ),
-                                              ),
-                                            )
-                                          : Expanded(
-                                              child: InkWell(
-                                                onTap: () {
-                                                  _pickImage(1);
-                                                },
-                                                child: Card(
-                                                  elevation: 10,
-                                                  child: SvgPicture.asset(
-                                                    "assets/icons/addpic.svg",
-                                                    // height: 4.h,
-                                                    // width: 4.w,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                      isImageTaken1
-                                          ? Expanded(
-                                              child: InkWell(
-                                                onTap: () {
-                                                  _pickImage(2);
-                                                },
-                                                child: Card(
-                                                  elevation: 10,
-                                                  child: Center(
-                                                      child:
-                                                          FutureBuilder<void>(
-                                                    future: retriveLostData(
-                                                        _imageFile1),
-                                                    builder:
-                                                        (BuildContext context,
-                                                            AsyncSnapshot<void>
-                                                                snapshot) {
-                                                      switch (snapshot
-                                                          .connectionState) {
-                                                        case ConnectionState
-                                                            .none:
-                                                        case ConnectionState
-                                                            .waiting:
-                                                          return const Text(
-                                                              'Picked an image');
-                                                        case ConnectionState
-                                                            .done:
-                                                          return _previewImage(
-                                                              _imageFile1);
-                                                        default:
-                                                          return const Text(
-                                                              'Picked an image');
-                                                      }
-                                                    },
-                                                  )),
-                                                ),
-                                              ),
-                                            )
-                                          : Expanded(
-                                              child: InkWell(
-                                                onTap: () {
-                                                  _pickImage(2);
-                                                },
-                                                child: Card(
-                                                  elevation: 10,
-                                                  child: SvgPicture.asset(
-                                                    "assets/icons/addpic.svg",
-                                                    // height: 4.h,
-                                                    // width: 4.w,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                    ],
-                                  ),
-                                ),
-                                isImageTaken == false || isImageTaken1 == false
-                                    ? Card(
-                                        elevation: 10,
-                                        child: Center(
-                                          child: Text(
-                                            imageErr.toString(),
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      )
-                                    : Container(),
-                                SizedBox(
-                                  height: getProportionateScreenHeight(20),
-                                ),
-                                _submitButton(),
-                                SizedBox(
-                                  height: getProportionateScreenHeight(40),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

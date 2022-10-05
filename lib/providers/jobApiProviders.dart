@@ -9,6 +9,7 @@ class JobsApiProvider {
       String tasktype,
       String ids,
       String hiveNo,
+      String taskActivityId,
       String role) async {
     var x = await DBProvider.db.checkJob(id);
     if (x! > 0) {
@@ -23,6 +24,8 @@ class JobsApiProvider {
         "apiary_id": ids,
         "hiveNo": hiveNo,
         "role": role,
+        "hive_attended": "1",
+        "task_activity_id": taskActivityId
       };
       DBProvider.db.createJobs(resul);
     }

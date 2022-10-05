@@ -26,6 +26,7 @@ class HarvestingList extends StatefulWidget {
 
 class _HarvestingListState extends State<HarvestingList> {
   var list;
+  List product = [];
   bool isLoading = false;
   // String _imageFile = "";
   // String _imageFile1 = "";
@@ -38,7 +39,7 @@ class _HarvestingListState extends State<HarvestingList> {
     print(x);
     setState(() {
       list = x;
-
+    
       isLoading = false;
     });
   }
@@ -227,30 +228,7 @@ class _HarvestingListState extends State<HarvestingList> {
                       'Apiary Name: ' + list![index]["apiary_name"].toString()),
                   onTap: () {},
                 ),
-                Divider(
-                  color: Colors.grey,
-                ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('Number Of Hives: ' +
-                      list![index]["no_of_hives"].toString()),
-                  onTap: () {},
-                ),
-                Divider(
-                  color: Colors.grey,
-                ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('Weight Of Comb Honey: ' +
-                      list![index]["weight_of_comb_honey"].toString()),
-                  onTap: () {},
-                ),
+
                 Divider(
                   color: Colors.grey,
                 ),
@@ -266,18 +244,7 @@ class _HarvestingListState extends State<HarvestingList> {
                 Divider(
                   color: Colors.grey,
                 ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('Weather Condition: ' +
-                      list![index]["weather_condition"].toString()),
-                  onTap: () {},
-                ),
-                Divider(
-                  color: Colors.grey,
-                ),
+
                 ListTile(
                   leading: new Icon(
                     Icons.arrow_right,
@@ -299,62 +266,7 @@ class _HarvestingListState extends State<HarvestingList> {
                       list![index]["other_bee_product"].toString()),
                   onTap: () {},
                 ),
-                list![index]["beevenom_weight"] != ''
-                    ? ListTile(
-                        leading: new Icon(
-                          Icons.arrow_right,
-                          color: Colors.green,
-                        ),
-                        title: new Text("Bee Venom Quantity:  " +
-                            list![index]["beevenom_weight"].toString() +
-                            "gram"),
-                        onTap: () {
-                          // Navigator.pop(context);
-                        },
-                      )
-                    : Container(),
-                list![index]["pollenweight"] != ""
-                    ? ListTile(
-                        leading: new Icon(
-                          Icons.arrow_right,
-                          color: Colors.green,
-                        ),
-                        title: new Text("Pollen Quantity : " +
-                            list![index]["pollenweight"].toString() +
-                            "gram"),
-                        onTap: () {
-                          // Navigator.pop(context);
-                        },
-                      )
-                    : Container(),
-                list![index]["propolisweight"] != ""
-                    ? ListTile(
-                        leading: new Icon(
-                          Icons.arrow_right,
-                          color: Colors.green,
-                        ),
-                        title: new Text("Propolis Quantity: " +
-                            list![index]["propolisweight"].toString() +
-                            "gram"),
-                        onTap: () {
-                          // Navigator.pop(context);
-                        },
-                      )
-                    : Container(),
-                list![index]["royaljelly_weight"] != ""
-                    ? ListTile(
-                        leading: new Icon(
-                          Icons.arrow_right,
-                          color: Colors.green,
-                        ),
-                        title: new Text("Royal Jelly Quantity: " +
-                            list![index]["royaljelly_weight"].toString() +
-                            "gram"),
-                        onTap: () {
-                          // Navigator.pop(context);
-                        },
-                      )
-                    : Container(),
+
                 Divider(
                   color: Colors.grey,
                 ),
@@ -373,23 +285,7 @@ class _HarvestingListState extends State<HarvestingList> {
                     // );
                   },
                 ),
-                list![index]["otherMeans"] != ""
-                    ? ListTile(
-                        leading: new Icon(
-                          Icons.arrow_right,
-                          color: Colors.green,
-                        ),
-                        title: new Text('Other Transportation Means: ' +
-                            list![index]["otherMeans"].toString()),
-                        onTap: () {
-                          // Navigator.pop(context);
-                          // Navigator.pushNamed(
-                          //   context,
-                          //   InspectionJobs.routeName,
-                          // );
-                        },
-                      )
-                    : Container(),
+
                 ListTile(
                   leading: new Icon(
                     Icons.arrow_right,
@@ -405,21 +301,7 @@ class _HarvestingListState extends State<HarvestingList> {
                     // );
                   },
                 ),
-                ListTile(
-                  leading: new Icon(
-                    Icons.arrow_right,
-                    color: Colors.green,
-                  ),
-                  title: new Text('Station abrey-apiary: ' +
-                      list![index]["stationapiary"].toString()),
-                  onTap: () {
-                    // Navigator.pop(context);
-                    // Navigator.pushNamed(
-                    //   context,
-                    //   InspectionJobs.routeName,
-                    // );
-                  },
-                ),
+
                 ListTile(
                   leading: new Icon(
                     Icons.arrow_right,

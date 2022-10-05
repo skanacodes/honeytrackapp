@@ -235,7 +235,7 @@ class _ExportFormState extends State<ExportForm> {
       text: TextSpan(
           text: 'Export',
           style: GoogleFonts.portLligatSans(
-            textStyle: Theme.of(context).textTheme.display1,
+            textStyle: Theme.of(context).textTheme.bodyText1,
             fontSize: 15.0.sp,
             fontWeight: FontWeight.w700,
             color: kPrimaryColor,
@@ -282,6 +282,7 @@ class _ExportFormState extends State<ExportForm> {
     try {
       print(jobId);
       print(userId);
+
       // print("am here");
       var tokens = await SharedPreferences.getInstance()
           .then((prefs) => prefs.getString('token'));
@@ -298,7 +299,6 @@ class _ExportFormState extends State<ExportForm> {
       var dio = Dio(options);
       var formData = FormData.fromMap({
         'id': jobId,
-        'quantity': quantity,
         'water_content': waterContent,
         'packing_materials': packingMaterials ?? '',
         'value': value,
@@ -327,7 +327,7 @@ class _ExportFormState extends State<ExportForm> {
         print('$sent $total');
       });
       print(response.statusCode);
-      print(response.statusMessage);
+      print(response.data);
       var res = response.data;
       print(res);
       if (response.statusCode == 201) {
@@ -564,35 +564,6 @@ class _ExportFormState extends State<ExportForm> {
                       child: Container(
                         child: TextFormField(
                           keyboardType: TextInputType.number,
-                          key: Key("quantity"),
-                          onSaved: (val) => quantity = val!,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                color: Colors.cyan,
-                              ),
-                            ),
-                            fillColor: Color(0xfff3f3f4),
-                            filled: true,
-                            labelText: "Quantity",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
-                          ),
-                          validator: (value) {
-                            if (value == '') return "This Field Is Required";
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 10, right: 16, left: 16),
-                      child: Container(
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
                           key: Key("water"),
                           onSaved: (val) => waterContent = val!,
                           decoration: InputDecoration(
@@ -628,28 +599,45 @@ class _ExportFormState extends State<ExportForm> {
                           //     320),
                           child: DropdownButtonFormField<String>(
                             decoration: InputDecoration(
-                                isDense: true,
-                                enabledBorder: UnderlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.white)),
-                                fillColor: Color(0xfff3f3f4),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.cyan,
+                                  ),
+                                ),
+                                fillColor: const Color(0xfff3f3f4),
                                 filled: true,
+                                isDense: true,
+                                enabled: true,
                                 contentPadding:
-                                    EdgeInsets.fromLTRB(20, 5.5, 0, 0),
-                                labelStyle: TextStyle(),
-                                labelText: 'Is Packaging Material Used ?'),
-                            focusColor: Colors.white,
+                                    const EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                labelText: "Is Proper Packaging Material ?",
+                                border: InputBorder.none),
+                            isExpanded: true,
                             value: ask1,
+                            style: const TextStyle(
+                                color: Colors.white, fontFamily: 'Ubuntu'),
+
                             //elevation: 5,
-                            style: TextStyle(color: Colors.white),
-                            iconEnabledColor: Colors.black,
+                            //style: TextStyle(color: Colors.white),
+
                             items: ask
                                 .map<DropdownMenuItem<String>>((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(color: Colors.black),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xfff3f3f4),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: kPrimaryColor),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
                                 ),
                               );
                             }).toList(),
@@ -685,30 +673,48 @@ class _ExportFormState extends State<ExportForm> {
                                 //     320),
                                 child: DropdownButtonFormField<String>(
                                   decoration: InputDecoration(
-                                      isDense: true,
-                                      enabledBorder: UnderlineInputBorder(
-                                          borderSide:
-                                              BorderSide(color: Colors.white)),
-                                      fillColor: Color(0xfff3f3f4),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                        borderSide: const BorderSide(
+                                          color: Colors.cyan,
+                                        ),
+                                      ),
+                                      fillColor: const Color(0xfff3f3f4),
                                       filled: true,
-                                      contentPadding:
-                                          EdgeInsets.fromLTRB(20, 5.5, 0, 0),
-                                      labelStyle: TextStyle(),
-                                      labelText:
-                                          'Select the Packaging Materials'),
-                                  focusColor: Colors.white,
+                                      isDense: true,
+                                      enabled: true,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                          30, 10, 15, 10),
+                                      labelText: "Select Packaging Material",
+                                      border: InputBorder.none),
+                                  isExpanded: true,
                                   value: packingMaterials,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Ubuntu'),
                                   //elevation: 5,
-                                  style: TextStyle(color: Colors.white),
+
                                   iconEnabledColor: Colors.black,
                                   items: packaging
                                       .map<DropdownMenuItem<String>>(
                                           (String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
-                                      child: Text(
-                                        value,
-                                        style: TextStyle(color: Colors.black),
+                                      child: Container(
+                                        width: double.infinity,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xfff3f3f4),
+                                          border: Border(
+                                            bottom: BorderSide(
+                                                width: 1, color: kPrimaryColor),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          value.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
                                       ),
                                     );
                                   }).toList(),
@@ -746,7 +752,7 @@ class _ExportFormState extends State<ExportForm> {
                             ),
                             fillColor: Color(0xfff3f3f4),
                             filled: true,
-                            labelText: "Values",
+                            labelText: "Consignment Value",
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
@@ -770,31 +776,47 @@ class _ExportFormState extends State<ExportForm> {
                           //     320),
                           child: DropdownButtonFormField<String>(
                             decoration: InputDecoration(
-                                isDense: true,
-                                enabledBorder: UnderlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: Colors.white)),
-                                fillColor: Color(0xfff3f3f4),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.cyan,
+                                  ),
+                                ),
+                                fillColor: const Color(0xfff3f3f4),
                                 filled: true,
+                                isDense: true,
+                                enabled: true,
                                 contentPadding:
-                                    EdgeInsets.fromLTRB(20, 5.5, 0, 0),
-                                labelStyle: TextStyle(),
-                                labelText: 'Select the Color'),
-                            focusColor: Colors.white,
+                                    const EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                labelText: "Select Color",
+                                border: InputBorder.none),
+                            isExpanded: true,
                             value: color,
                             //elevation: 5,
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(
+                                color: Colors.white, fontFamily: 'Ubuntu'),
                             iconEnabledColor: Colors.black,
                             items: colorList
                                 .map<DropdownMenuItem<String>>((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(color: Colors.black),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xfff3f3f4),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: kPrimaryColor),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
                                 ),
                               );
                             }).toList(),
+
                             validator: (value) {
                               if (value == null) {
                                 return "This Field is required";

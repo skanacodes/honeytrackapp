@@ -6,6 +6,7 @@ import 'package:honeytrackapp/screens/apiaries/InspectionMainScreen.dart';
 import 'package:honeytrackapp/screens/apiaries/harvesting_main.dart';
 import 'package:honeytrackapp/services/constants.dart';
 import 'package:honeytrackapp/services/screenArguments.dart';
+import 'package:honeytrackapp/services/size_config.dart';
 
 class InspectionJobs extends StatefulWidget {
   final String id;
@@ -51,10 +52,11 @@ class _InspectionJobsState extends State<InspectionJobs> {
                     color: kPrimaryColor,
                   )
                 : Container(
+                    height: getProportionateScreenHeight(600),
                     color: Colors.white,
                     child: AnimationLimiter(
                       child: ListView.builder(
-                        shrinkWrap: true,
+                        //shrinkWrap: true,
                         itemCount: jobs!.length,
                         itemBuilder: (BuildContext context, int index) {
                           return AnimationConfiguration.staggeredList(
@@ -69,6 +71,7 @@ class _InspectionJobsState extends State<InspectionJobs> {
                                   child: Container(
                                     child: ListTile(
                                       onTap: () {
+                                        print(jobs![index]["hiveNo"]);
                                         jobs![index]["tasktype"].toString() ==
                                                 "Inspection"
                                             ? Navigator.pushNamed(
@@ -83,7 +86,19 @@ class _InspectionJobsState extends State<InspectionJobs> {
                                                     jobs![index]["activity"]
                                                         .split("[]"),
                                                     jobs![index]["apiary_id"]
-                                                        .split("[]")),
+                                                        .split(
+                                                      "[]",
+                                                    ),
+                                                    jobs![index]["hiveNo"]
+                                                        .split(
+                                                      "[]",
+                                                    ),
+                                                    jobs![index]
+                                                            ["hive_attended"]
+                                                        .toString(),
+                                                    taskId: jobs![index]
+                                                            ["task_activity_id"]
+                                                        .toString()),
                                               )
                                             : Navigator.pushNamed(context,
                                                 HarvestingMainScreen.routeName,
@@ -96,7 +111,17 @@ class _InspectionJobsState extends State<InspectionJobs> {
                                                     jobs![index]["activity"]
                                                         .split("[]"),
                                                     jobs![index]["apiary_id"]
-                                                        .split("[]")));
+                                                        .split("[]"),
+                                                    jobs![index]["hiveNo"]
+                                                        .split(
+                                                      "[]",
+                                                    ),
+                                                    jobs![index]
+                                                            ["hive_attended"]
+                                                        .toString(),
+                                                    taskId: jobs![index]
+                                                            ["task_activity_id"]
+                                                        .toString()));
                                       },
                                       trailing: Icon(
                                         Icons.arrow_right,

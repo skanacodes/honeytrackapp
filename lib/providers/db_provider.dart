@@ -55,27 +55,43 @@ class DBProvider {
           'hiveNo TEXT,'
           'tasktype TEXT,'
           'apiary_id TEXT,'
+          'hive_attended TEXT,'
+          'task_activity_id TEXT,'
           'role TEXT'
           ')');
+      //   'observations': _expectedObservation!.join(","),
+      // 'action_taken': _actionTaken!.join(","),
+      // 'blooming_species': bloomingspecies,
+      // 'other_action_taken': specifyActionTaken.toString(),
+      // 'other_observations': specifyExpectedObservations.toString(),
+      // 'expected_harvest_kg': expectedHarvest.toString(),
+      // 'apiary_id': apiaryIds,
+      // 'harvest_expected': _radioValue,
+      // 'task_activity_id': widget.taskId,
+      // 'is_complete': hiveAttended == int.parse(hiveTotal![0]) ? true : false,
+      // 'hive_code': _qrInfo,
+      // 'colonization_date': formattedDate,
 
       await db.execute('CREATE TABLE Inspections('
           'id INTEGER PRIMARY KEY AUTOINCREMENT,'
           'person_id TEXT,'
-          'job_id TEXT,'
+          'task_activity_id TEXT,'
           'inspection_season TEXT,'
           'general_condition TEXT,'
-          'hivecode TEXT,'
+          'hive_code TEXT,'
           'colonization_date TEXT,'
-          'expected_observation TEXT,'
+          'observations TEXT,'
           'specify_observation TEXT,'
           'action_taken TEXT,'
           'specify_action TEXT,'
           'blooming_species TEXT,'
-          'expectedForHarvest TEXT,'
-          'expected_harvest TEXT,'
+          'expected_for_harvest TEXT,'
+          'expected_harvest_kg TEXT,'
+          'apiary_id TEXT,'
           'apiary_name TEXT,'
           'img1 TEXT,'
           'img2 TEXT,'
+          'inserting_way TEXT,'
           'upload_status TEXT'
           ')');
       await db.execute('CREATE TABLE Harvesting('
@@ -114,14 +130,18 @@ class DBProvider {
 
   // Insert employee on database
   createUser(User newUser) async {
-    print('jsdjdsjdsjdsjds');
-    // await deleteAllEmployees();
-    final db = await database;
-    final res = await db!.insert('User', newUser.toJson());
-    //print(res);
-    //await getAllUser();
-    //print('jsdjdsjdsjdsjds');
-    return res;
+    try {
+      //  print('jsdjdsjdsjdsjds');
+      // await deleteAllEmployees();
+      final db = await database;
+      final res = await db!.insert('User', newUser.toJson());
+      print(res);
+      var x = await getAllUser();
+      print(x);
+      return res;
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   createStats(var newstats) async {
@@ -136,7 +156,7 @@ class DBProvider {
   }
 
   createJobs(var newJobs) async {
-    print('jsdjdsjdsjdsjds');
+    // print('jsdjdsjdsjdsjds');
     //  await deleteAllStats();
     final db = await database;
     final res = await db!.insert('Jobs', newJobs);
@@ -148,7 +168,7 @@ class DBProvider {
 
   Future<String> insertSingleApiaryInspection(InspectionModal inspect) async {
     // Get a reference to the database.
-    print("am in inserting");
+    // print("am in inserting");
     final db = await database;
     try {
       await db!.insert(
@@ -161,6 +181,39 @@ class DBProvider {
     } catch (e) {
       print('error while inserting data');
       return 'failed';
+    }
+  }
+
+  Future<String> hiveattendedNumber(jobId) async {
+    print("am in inserting");
+    final db = await database;
+    try {
+      final res = await db!
+          .rawQuery('SELECT hive_attended FROM Jobs WHERE job_id=?', [jobId]);
+      print(res[0]["hive_attended"]);
+      return res[0]["hive_attended"].toString();
+    } catch (e) {
+      print(e.toString() + 'error while updating data');
+      return "fail";
+    }
+  }
+
+  Future<String> UpdateHiveAttended(jobId, value) async {
+    // Get a reference to the database.
+    print("am in inserting");
+    final db = await database;
+    try {
+      int count = await db!.rawUpdate(
+          'UPDATE Jobs SET hive_attended = ? WHERE job_id = ?', [value, jobId]);
+      print(count);
+
+      final res = await db
+          .rawQuery('SELECT hive_attended FROM Jobs WHERE job_id=?', [jobId]);
+      print(res[0]["hive_attended"]);
+      return res[0]["hive_attended"].toString();
+    } catch (e) {
+      print(e.toString() + 'error while updating data');
+      return "fail";
     }
   }
 
@@ -191,12 +244,13 @@ class DBProvider {
 
   Future<int?> checkId(String email) async {
     final db = await database;
-
+    var x = await db!.rawQuery('SELECT * FROM User WHERE email=?', [email]);
+    print(x);
     final res =
-        await db!.rawQuery('SELECT COUNT(*) FROM User WHERE email=?', [email]);
-
+        await db.rawQuery('SELECT COUNT(*) FROM User WHERE email=?', [email]);
+    print(res);
     final count = Sqflite.firstIntValue(res);
-    print(count);
+    // print(count.toString() + "anskfdksnnkkv");
 
     return count;
   }
@@ -278,10 +332,29 @@ class DBProvider {
   }
 
   Future getUserData(String email) async {
+    try {
+      print(email);
+      final db = await database;
+
+      final res =
+          await db!.rawQuery('SELECT * FROM User WHERE email=?', [email]);
+      print(res);
+      print("data");
+      return res;
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<List<InspectionModal>> getAllTreesDetails() async {
     final db = await database;
-    final res = await db!.rawQuery('SELECT * FROM User WHERE email=?', [email]);
-    print(res);
-    return res;
+    final res = await db!.rawQuery("SELECT * FROM Inspections");
+
+    List<InspectionModal> list = res.isNotEmpty
+        ? res.map((c) => InspectionModal.fromJson(c)).toList()
+        : [];
+
+    return list;
   }
 
   Future<List<User>> getAllUser() async {

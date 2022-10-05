@@ -166,7 +166,7 @@ class _ImportFormState extends State<ImportForm> {
       text: TextSpan(
           text: 'Import',
           style: GoogleFonts.portLligatSans(
-            textStyle: Theme.of(context).textTheme.display1,
+            textStyle: Theme.of(context).textTheme.bodyText1,
             fontSize: 15.0.sp,
             fontWeight: FontWeight.w700,
             color: kPrimaryColor,
@@ -486,35 +486,35 @@ class _ImportFormState extends State<ImportForm> {
                 shadowColor: kPrimaryColor,
                 child: Column(
                   children: <Widget>[
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 10, right: 16, left: 16),
-                      child: Container(
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
-                          key: Key("quantity"),
-                          onSaved: (val) => quantity = val!,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                color: Colors.cyan,
-                              ),
-                            ),
-                            fillColor: Color(0xfff3f3f4),
-                            filled: true,
-                            labelText: "Quantity",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
-                          ),
-                          validator: (value) {
-                            if (value!.isEmpty) return "This Field Is Required";
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding:
+                    //       const EdgeInsets.only(top: 10, right: 16, left: 16),
+                    //   child: Container(
+                    //     child: TextFormField(
+                    //       keyboardType: TextInputType.number,
+                    //       key: Key("quantity"),
+                    //       onSaved: (val) => quantity = val!,
+                    //       decoration: InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //           borderRadius: BorderRadius.circular(10.0),
+                    //           borderSide: BorderSide(
+                    //             color: Colors.cyan,
+                    //           ),
+                    //         ),
+                    //         fillColor: Color(0xfff3f3f4),
+                    //         filled: true,
+                    //         labelText: "Quantity",
+                    //         border: InputBorder.none,
+                    //         isDense: true,
+                    //         contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
+                    //       ),
+                    //       validator: (value) {
+                    //         if (value!.isEmpty) return "This Field Is Required";
+                    //         return null;
+                    //       },
+                    //     ),
+                    //   ),
+                    // ),
                     Padding(
                       padding:
                           const EdgeInsets.only(top: 10, right: 16, left: 16),
@@ -590,7 +590,7 @@ class _ImportFormState extends State<ImportForm> {
                             ),
                             fillColor: Color(0xfff3f3f4),
                             filled: true,
-                            labelText: "Consignment Values",
+                            labelText: "Consignment Value",
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),

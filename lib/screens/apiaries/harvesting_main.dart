@@ -53,6 +53,8 @@ class _HarvestingMainScreenState extends State<HarvestingMainScreen> {
               jobname: args.jobName,
               apiriesName: args.apiariesNames,
               apiriesId: args.apiariesId,
+              apiaryNum: args.apiaryNum,
+              taskId: args.taskId!,
             ),
             HarvestingList(
               jobId: args.jobId,

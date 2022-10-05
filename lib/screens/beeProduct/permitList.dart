@@ -285,10 +285,11 @@ class _PermittListState extends State<PermittList> {
                           : Padding(
                               padding: EdgeInsets.all(10),
                               child: Container(
+                                height: getProportionateScreenHeight(520),
                                 color: Colors.white,
                                 child: AnimationLimiter(
                                   child: ListView.builder(
-                                    shrinkWrap: true,
+                                    // shrinkWrap: true,
                                     itemCount: data.length,
                                     itemBuilder:
                                         (BuildContext context, int index) {
@@ -311,27 +312,34 @@ class _PermittListState extends State<PermittList> {
                                                             context, ExportForm.routeName,
                                                             arguments: ScreenArguments(
                                                                 args,
-                                                                data[index]
-                                                                        ["id"]
+                                                                data[index]["id"]
                                                                     .toString(),
                                                                 "",
                                                                 [],
-                                                                []))
+                                                                [],
+                                                                [],
+                                                                ''))
                                                         : type == 'Import'
-                                                            ? Navigator.pushNamed(
-                                                                context, ImportForm.routeName,
+                                                            ? Navigator.pushNamed(context, ImportForm.routeName,
                                                                 arguments: ScreenArguments(
                                                                     args,
                                                                     data[index]["id"]
                                                                         .toString(),
                                                                     "",
                                                                     [],
-                                                                    []))
+                                                                    [],
+                                                                    [],
+                                                                    ''))
                                                             : Navigator.pushNamed(
-                                                                context,
-                                                                InternalMarketForm
-                                                                    .routeName,
-                                                                arguments: ScreenArguments(args, data[index]["id"].toString(), "", [], []));
+                                                                context, InternalMarketForm.routeName,
+                                                                arguments: ScreenArguments(
+                                                                    args,
+                                                                    data[index]["id"].toString(),
+                                                                    "",
+                                                                    [],
+                                                                    [],
+                                                                    [],
+                                                                    ''));
 
                                                     // data![index]["exit_point"]
                                                     //             .toString() ==
@@ -359,8 +367,7 @@ class _PermittListState extends State<PermittList> {
                                                       child:
                                                           Text('${index + 1}')),
                                                   title: Text("Dealer Name: " +
-                                                      data[index]["dealer"]
-                                                              ["full_name"]
+                                                      data[index]["dealer_name"]
                                                           .toString()),
                                                   subtitle: Text(type ==
                                                           'Export'
@@ -374,8 +381,7 @@ class _PermittListState extends State<PermittList> {
                                                                       "origin_country"]
                                                                   .toString()
                                                           : 'Address:' +
-                                                              data[index]["dealer"]
-                                                                      [
+                                                              data[index][
                                                                       "address"]
                                                                   .toString()),
                                                 ),

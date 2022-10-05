@@ -4,9 +4,10 @@ import 'package:honeytrackapp/services/size_config.dart';
 
 import 'package:rflutter_alert/rflutter_alert.dart';
 
-const kPrimaryColor = Color(0xFFFCB43A);
+const kPrimaryColor = Color(0xFFdebd60);
 const kPrimaryLightColor = Color(0xFF0C9869);
 const String baseUrl = "http://mis.tfs.go.tz/honey-traceability";
+//const String baseUrl = "http://41.59.228.37/honey-traceability";
 // const kPrimaryGradientColor = LinearGradient(
 //   begin: Alignment.topLeft,
 //   end: Alignment.bottomRight,

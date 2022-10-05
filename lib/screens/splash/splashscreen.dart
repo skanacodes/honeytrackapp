@@ -72,23 +72,25 @@ class _SplashScreenState extends State<SplashScreen> {
           SizedBox(
             height: 20.0.h,
           ),
-          SizedBox(
-            width: double.infinity,
-            child: TextLiquidFill(
-              text: 'HoneyTrackApp',
-              waveColor: Colors.black,
-              boxBackgroundColor: Colors.white,
-              textStyle: TextStyle(
-                fontSize: 30.0,
-                //fontFamily: 'Pacifico',
-                fontWeight: FontWeight.bold,
+          Center(
+            child: SizedBox(
+              width: double.infinity,
+              child: TextLiquidFill(
+                text: 'HoneyTrackApp',
+                waveColor: Colors.black,
+                boxBackgroundColor: Colors.white,
+                textStyle: TextStyle(
+                  fontSize: 30.0,
+                  fontFamily: 'Ubuntu',
+                  fontWeight: FontWeight.bold,
+                ),
+                boxHeight: 150.0,
               ),
-              boxHeight: 150.0,
             ),
           ),
           Container(
             height: 25.0.h,
-            width: 40.0.w,
+            width: 45.0.w,
             child: Image.asset(
               'assets/images/logo.png',
               fit: BoxFit.cover,
@@ -97,9 +99,9 @@ class _SplashScreenState extends State<SplashScreen> {
           SizedBox(
             height: 10.0.h,
           ),
-          SpinKitFadingCircle(
+          SpinKitSpinningLines(
             color: kPrimaryColor,
-            size: 35.0.sp,
+            size: 55.0.sp,
           )
         ],
       ),
