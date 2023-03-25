@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -103,7 +104,7 @@ class _InspectionState extends State<Inspection> {
     setState(() {
       print(code);
       _camState = false;
-      _qrInfo = code;
+      _qrInfo = json.decode(code!).toString();
     });
   }
 
@@ -325,7 +326,7 @@ class _InspectionState extends State<Inspection> {
         setState(() {
           numb == 1 ? img1 = newImage.path : img2 = newImage.path;
         });
-        print(img1);
+        print(img1 + "********************************");
       } else {
         print("Error While Taking Picture");
       }
@@ -352,8 +353,8 @@ class _InspectionState extends State<Inspection> {
       context: context,
       initialDate: DateTime.now(),
       initialDatePickerMode: DatePickerMode.day,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2025),
+      firstDate: DateTime(2010),
+      lastDate: DateTime.now(),
     );
     print(picked);
     setState(() {
@@ -475,6 +476,7 @@ class _InspectionState extends State<Inspection> {
   }
 
   Future<String> saveDataLocally(status) async {
+    print(img1);
     String response = await DBProvider.db.insertSingleApiaryInspection(
         InspectionModal(
             actionsTaken: _actionTaken.toString(),
@@ -495,7 +497,10 @@ class _InspectionState extends State<Inspection> {
             uploadStatus: status,
             apiaryId: apiaryIds.toString(),
             insetingWay: '1',
-            apiaryName: apiarName!));
+            isComplete:
+                hiveAttended == int.parse(hiveTotal![0]) ? "true" : "false",
+            apiaryName: apiarName!,
+            taskActivityId: widget.taskId));
     if (response == "Success") {
       return 'success';
     } else {
@@ -520,55 +525,22 @@ class _InspectionState extends State<Inspection> {
             // // var x = await uploadImage(img1, uploadUrl);
             // // print(x);
 
-            if (_connectionStatus.toString() == 'ConnectivityResult.none') {
-              var response = await saveDataLocally('0');
-              if (response == 'success') {
-                setState(() {
-                  hiveAttended++;
-                });
-                var count = await DBProvider.db
-                    .UpdateHiveAttended(widget.jobId, hiveAttended.toString());
-                print(count);
-                setState(() {
-                  hiveAttended = int.parse(count);
-                });
-                message('success', 'Data Stored Locally Successfull');
-              } else {
-                message('error', 'Failed To Store Data Locally');
-              }
+            var response = await saveDataLocally('0');
+            if (response == 'success') {
+              setState(() {
+                hiveAttended++;
+              });
+              var count = await DBProvider.db
+                  .UpdateHiveAttended(widget.jobId, hiveAttended.toString());
+              print(count);
+              setState(() {
+                hiveAttended = int.parse(count);
+              });
+              message('success', 'Data Stored Locally Successfull');
             } else {
-              var x = await uploadData();
-              if (x == 'success') {
-                // message('success', 'Data Submitted Successfull');
-                setState(() {
-                  hiveAttended++;
-                });
-                var count = await DBProvider.db
-                    .UpdateHiveAttended(widget.jobId, hiveAttended.toString());
-                print(count);
-                setState(() {
-                  hiveAttended = int.parse(count);
-                });
-
-                await saveDataLocally('1');
-              } else {
-                var response = await saveDataLocally('0');
-                if (response == 'success') {
-                  setState(() {
-                    hiveAttended++;
-                  });
-                  var count = await DBProvider.db.UpdateHiveAttended(
-                      widget.jobId, hiveAttended.toString());
-                  print(count);
-                  setState(() {
-                    hiveAttended = int.parse(count);
-                  });
-                  message('success', 'Data Stored Locally Successfull');
-                } else {
-                  message('error', 'Failed To Store Data Locally');
-                }
-              }
+              message('error', 'Failed To Store Data Locally');
             }
+
             apiaryList == null ? print('null') : apiaryList!.clear();
 
             _expectedObservation!.clear();
@@ -1469,7 +1441,7 @@ class _InspectionState extends State<Inspection> {
                                                     ),
                                                   ]),
                                             ),
-                                            _radioValue == 0
+                                            _radioValue == 1
                                                 ? Padding(
                                                     padding:
                                                         const EdgeInsets.only(

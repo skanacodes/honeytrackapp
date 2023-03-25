@@ -96,18 +96,24 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
 
   getNumber() async {
     // var stats = await DBProvider.db.getstats();
-
+    //print("*****************/////////");
     // data1 = stats.toList();
-    print(widget.dealers.toString() + "reerh");
+    //print(widget.dealers.toString() + "reerh");
     int? num1 = await DBProvider.db.countTasks(widget.id);
     setState(() {
       numbers = num1!;
     });
+    // print(numbers);
   }
 
   @override
   void initState() {
-    this.getNumber();
+    Future.delayed(const Duration(seconds: 8), () {
+// Here you can write your code
+
+      getNumber();
+    });
+
     // ignore: todo
     // TODO: implement initState
     super.initState();
@@ -199,22 +205,20 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
                       ),
                     ),
                   ),
-                  widget.role == 'FSUHQ' || widget.role == 'FSUZone'
-                      ? Container()
-                      : InkWell(
-                          onTap: () {
-                            // Navigator.pushNamed(context, RejectedTpScreen.routeName,
-                            //     arguments: widget.role);
-                          },
-                          child: gridTile(
-                            'Bee Keepers',
-                            SvgPicture.asset(
-                              "assets/icons/beekeeper.svg",
-                              height: 6.h,
-                              width: 6.w,
-                            ),
-                          ),
-                        ),
+                  InkWell(
+                    onTap: () {
+                      // Navigator.pushNamed(context, RejectedTpScreen.routeName,
+                      //     arguments: widget.role);
+                    },
+                    child: gridTile(
+                      'Bee Keepers',
+                      SvgPicture.asset(
+                        "assets/icons/beekeeper.svg",
+                        height: 6.h,
+                        width: 6.w,
+                      ),
+                    ),
+                  ),
                 ],
               )
             ],

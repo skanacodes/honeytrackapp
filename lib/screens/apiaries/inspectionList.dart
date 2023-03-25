@@ -39,7 +39,7 @@ class _InspectionListState extends State<InspectionList> {
   }
 
   Widget _previewImage(var _imageFile) {
-    // ignore: unnecessary_null_comparison
+    print(_imageFile.runtimeType);
     if (_imageFile != null) {
       return Container(
         // height: 100,
@@ -250,7 +250,7 @@ class _InspectionListState extends State<InspectionList> {
                     color: Colors.green,
                   ),
                   title: new Text('Expected-Observations: ' +
-                      list![index]["expected_observations"].toString()),
+                      list![index]["observations"].toString()),
                   onTap: () {
                     // Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -304,7 +304,7 @@ class _InspectionListState extends State<InspectionList> {
                     color: Colors.green,
                   ),
                   title: new Text(
-                      list![index]["expected_for_harvest"].toString() == '1'
+                      list![index]["harvest_expected"].toString() == '1'
                           ? "Expected For Harvest: true"
                           : "Expected For Harvest: false"),
                   onTap: () {
@@ -320,7 +320,7 @@ class _InspectionListState extends State<InspectionList> {
                     color: Colors.green,
                   ),
                   title: new Text('Harvest Weight: ' +
-                      list![index]["harvest_weight"].toString()),
+                      list![index]["expected_harvest_kg"].toString()),
                   onTap: () {
                     //Navigator.pop(context);
                     // Navigator.pushNamed(

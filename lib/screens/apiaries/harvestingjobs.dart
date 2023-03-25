@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -135,7 +136,8 @@ class _HarvestingJobState extends State<HarvestingJob> {
     setState(() {
       print(code);
       _camState = false;
-      _qrInfo = code;
+      //_qrInfo = code;
+      _qrInfo = json.decode(code!).toString();
     });
   }
 
@@ -581,24 +583,27 @@ class _HarvestingJobState extends State<HarvestingJob> {
   }
 
   Future<String> saveDataLocally(status) async {
-    String response = await DBProvider.db.insertSingleHarvestData(
-        HarvestingModal(
-            jobId: widget.jobId,
-            apiaryId: apiaryIds!.toString(),
-            userId: widget.userId.toString(),
-            transportationTime: timeController.text,
-            apiaryName: apiarName ?? '',
-            noOfHives: "0",
-            img1: img1!,
-            img2: img2!,
-            equipmentUsed: equipmentUsed.toString(),
-            harvestingCost: harvestingCost,
-            hiveCode: "kndfk/fld",
-            moistureContent: moistureContent,
-            otherBeeProductHarvested: beeProducts.join(","),
-            otherTransportationMeans: otherTransportationMeans,
-            transportationMeans: transportationMeans.toString(),
-            uploadStatus: status));
+    String response =
+        await DBProvider.db.insertSingleHarvestData(HarvestingModal(
+      jobId: widget.jobId,
+      apiaryId: apiaryIds!.toString(),
+      userId: widget.userId.toString(),
+      transportationTime: timeController.text,
+      apiaryName: apiarName ?? '',
+      noOfHives: "0",
+      img1: img1!,
+      img2: img2!,
+      equipmentUsed: equipmentUsed.toString(),
+      harvestingCost: harvestingCost,
+      hiveCode: _qrInfo!,
+      taskActivityId: widget.taskId,
+      moistureContent: moistureContent,
+      otherBeeProductHarvested: beeProducts.toString(),
+      otherTransportationMeans: otherTransportationMeans,
+      transportationMeans: transportationMeans.toString(),
+      uploadStatus: status,
+      isComplete: hiveAttended == int.parse(hiveTotal![0]) ? "true" : "false",
+    ));
     if (response == "Success") {
       return 'success';
     } else {
@@ -623,56 +628,22 @@ class _HarvestingJobState extends State<HarvestingJob> {
                     isLoading = true;
                   });
 
-                  if (_connectionStatus.toString() ==
-                      'ConnectivityResult.none') {
-                    var response = await saveDataLocally('0');
-                    if (response == 'success') {
-                      setState(() {
-                        hiveAttended++;
-                      });
-                      var count = await DBProvider.db.UpdateHiveAttended(
-                          widget.jobId, hiveAttended.toString());
-                      print(count);
-                      setState(() {
-                        hiveAttended = int.parse(count);
-                      });
-                      message('success', 'Data Stored Locally Successfull');
-                    } else {
-                      message('error', 'Failed To Store Data Locally');
-                    }
+                  var response = await saveDataLocally('0');
+                  if (response == 'success') {
+                    setState(() {
+                      hiveAttended++;
+                    });
+                    var count = await DBProvider.db.UpdateHiveAttended(
+                        widget.jobId, hiveAttended.toString());
+                    print(count);
+                    setState(() {
+                      hiveAttended = int.parse(count);
+                    });
+                    message('success', 'Data Stored Locally Successfull');
                   } else {
-                    print(beeProducts);
-                    var x = await uploadData();
-                    if (x == 'success') {
-                      setState(() {
-                        hiveAttended++;
-                      });
-                      var count = await DBProvider.db.UpdateHiveAttended(
-                          widget.jobId, hiveAttended.toString());
-                      print(count);
-                      setState(() {
-                        hiveAttended = int.parse(count);
-                      });
-                      // message('success', 'Data Submitted Successfull');
-                      await saveDataLocally('1');
-                    } else {
-                      var response = await saveDataLocally('0');
-                      if (response == 'success') {
-                        setState(() {
-                          hiveAttended++;
-                        });
-                        var count = await DBProvider.db.UpdateHiveAttended(
-                            widget.jobId, hiveAttended.toString());
-                        print(count);
-                        setState(() {
-                          hiveAttended = int.parse(count);
-                        });
-                        message('success', 'Data Stored Locally Successfull');
-                      } else {
-                        message('error', 'Failed To Store Data Locally');
-                      }
-                    }
+                    message('error', 'Failed To Store Data Locally');
                   }
+
                   apiaryList == null ? print('null') : apiaryList!.clear();
 
                   equipmentUsed!.clear();
@@ -1308,10 +1279,12 @@ class _HarvestingJobState extends State<HarvestingJob> {
                                                         //     weightOfCombHoney = val!,
                                                         onSaved: (val) {
                                                           beeProducts.add({
-                                                            "product":
-                                                                "Comb Honey",
-                                                            "unit": "Kg",
-                                                            "quantity": val
+                                                            "\"product\"":
+                                                                "\"Comb Honey\"",
+                                                            "\"unit\"":
+                                                                "\"Kg\"",
+                                                            "\"quantity\"":
+                                                                "\"$val\""
                                                           });
                                                         },
                                                         decoration:
@@ -1368,12 +1341,15 @@ class _HarvestingJobState extends State<HarvestingJob> {
                                                         key: Key("other"),
                                                         // onSaved: (val) =>
                                                         //     beeVenomweight = val!,
+
                                                         onSaved: (val) {
                                                           beeProducts.add({
-                                                            "product":
-                                                                "Bee Venom",
-                                                            "unit": "G",
-                                                            "quantity": val
+                                                            "\"product\"":
+                                                                "\"Bee Venom\"",
+                                                            "\"unit\"":
+                                                                "\"gm\"",
+                                                            "\"quantity\"":
+                                                                "\"$val\""
                                                           });
                                                         },
                                                         decoration:
@@ -1432,9 +1408,12 @@ class _HarvestingJobState extends State<HarvestingJob> {
                                                         //     pollenWeight = val!,
                                                         onSaved: (val) {
                                                           beeProducts.add({
-                                                            "product": "Pollen",
-                                                            "unit": "G",
-                                                            "quantity": val
+                                                            "\"product\"":
+                                                                "\"Pollen\"",
+                                                            "\"unit\"":
+                                                                "\"gm\"",
+                                                            "\"quantity\"":
+                                                                "\"$val\""
                                                           });
                                                         },
                                                         decoration:
@@ -1491,12 +1470,15 @@ class _HarvestingJobState extends State<HarvestingJob> {
                                                         key: Key("other"),
                                                         // onSaved: (val) =>
                                                         //     propolisWeight = val!,
+
                                                         onSaved: (val) {
                                                           beeProducts.add({
-                                                            "product":
-                                                                "Propolis",
-                                                            "unit": "G",
-                                                            "quantity": val
+                                                            "\"product\"":
+                                                                "\"Propolis\"",
+                                                            "\"unit\"":
+                                                                "\"gm\"",
+                                                            "\"quantity\"":
+                                                                "\"$val\""
                                                           });
                                                         },
                                                         decoration:
@@ -1553,12 +1535,15 @@ class _HarvestingJobState extends State<HarvestingJob> {
                                                         key: Key("other"),
                                                         // onSaved: (val) =>
                                                         //     royalJellyweight = val!,
+
                                                         onSaved: (val) {
                                                           beeProducts.add({
-                                                            "product":
-                                                                "Royal Jelly",
-                                                            "unit": "Mils",
-                                                            "quantity": val
+                                                            "\"product\"":
+                                                                "\"Royal Jelly\"",
+                                                            "\"unit\"":
+                                                                "\"Mils\"",
+                                                            "\"quantity\"":
+                                                                "\"$val\""
                                                           });
                                                           print(beeProducts);
                                                         },

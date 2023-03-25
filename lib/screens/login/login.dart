@@ -22,6 +22,7 @@ import 'package:honeytrackapp/services/usermodel.dart' as user;
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
 
 class LoginScreen extends StatefulWidget {
   static String routeName = "/login";
@@ -174,55 +175,55 @@ class _LoginScreenState extends State<LoginScreen> {
             tasks = res["task"];
             len = res["task"].length;
           });
-          for (var i = 0; i < len; i++) {
-            if (tasks[i]["tasks"] == null) {
-              print("Null Task");
-            } else {
-              print(tasks[i]["tasks"]["id"].toString());
-              List apiaries = [];
-              List hiveNo = [];
-              List apiariesId = [];
-              String? taskActivityId;
+          // for (var i = 0; i < len; i++) {
+          //   if (tasks[i]["tasks"] == null) {
+          //     print("Null Task");
+          //   } else {
+          //     print(tasks[i]["tasks"]["id"].toString());
+          //     List apiaries = [];
+          //     List hiveNo = [];
+          //     List apiariesId = [];
+          //     String? taskActivityId;
 
-              for (var j = 0; j < tasks[i]["tasks"]["activities"].length; j++) {
-                String? ap;
-                String? ids;
-                String? nohive;
-                // int sum = 0;
-                print("Task two");
-                tasks[i]["tasks"]["activities"][j]["apiary"] != null
-                    ? ap = tasks[i]["tasks"]["activities"][j]["apiary"]["name"]
-                    : ap = '';
-                tasks[i]["tasks"]["activities"][j]["apiary"] != null
-                    ? ids = tasks[i]["tasks"]["activities"][j]["apiary"]["id"]
-                        .toString()
-                    : ids = '';
-                nohive = tasks[i]["tasks"]["activities"][j]["hive_number"]
-                    .toString();
-                taskActivityId =
-                    tasks[i]["tasks"]["activities"][j]["id"].toString();
-                print("Task Three");
-                // sum = sum +
-                //     int.parse(
-                //         tasks[i]["tasks"]["activities"][j]["hive_number"]);
-                //print(sum);
-                apiaries.add(ap);
-                apiariesId.add(ids);
-                hiveNo.add(nohive);
-              }
-              print(taskActivityId);
-              await storeJobs(
-                  res['user']['id'].toString(),
-                  tasks[i]["tasks"]["id"].toString(),
-                  tasks[i]["tasks"]["name"],
-                  tasks[i]["tasks"]["task_type"]["name"],
-                  apiaries.toString(),
-                  apiariesId.toString(),
-                  hiveNo.toString(),
-                  taskActivityId!,
-                  tasks[i]["roles"]["name"]);
-            }
-          }
+          //     for (var j = 0; j < tasks[i]["tasks"]["activities"].length; j++) {
+          //       String? ap;
+          //       String? ids;
+          //       String? nohive;
+          //       // int sum = 0;
+          //       print("Task two");
+          //       tasks[i]["tasks"]["activities"][j]["apiary"] != null
+          //           ? ap = tasks[i]["tasks"]["activities"][j]["apiary"]["name"]
+          //           : ap = '';
+          //       tasks[i]["tasks"]["activities"][j]["apiary"] != null
+          //           ? ids = tasks[i]["tasks"]["activities"][j]["apiary"]["id"]
+          //               .toString()
+          //           : ids = '';
+          //       nohive = tasks[i]["tasks"]["activities"][j]["hive_number"]
+          //           .toString();
+          //       taskActivityId =
+          //           tasks[i]["tasks"]["activities"][j]["id"].toString();
+          //       print("Task Three");
+          //       // sum = sum +
+          //       //     int.parse(
+          //       //         tasks[i]["tasks"]["activities"][j]["hive_number"]);
+          //       //print(sum);
+          //       apiaries.add(ap);
+          //       apiariesId.add(ids);
+          //       hiveNo.add(nohive);
+          //     }
+          //     print(taskActivityId);
+          //     await storeJobs(
+          //         res['user']['id'].toString(),
+          //         tasks[i]["tasks"]["id"].toString(),
+          //         tasks[i]["tasks"]["name"],
+          //         tasks[i]["tasks"]["task_type"]["name"],
+          //         apiaries.toString(),
+          //         apiariesId.toString(),
+          //         hiveNo.toString(),
+          //         taskActivityId!,
+          //         tasks[i]["roles"]["name"]);
+          //   }
+          // }
           // print(res['station']['name']);
           // print(res['user']['first_name']);
           // print(res['user']['last_name']);
@@ -386,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() {
                 data = y;
               });
-              //  print(data);
+              print(data);
               Navigator.pushNamed(context, DashboardScreen.routeName,
                   arguments: user.User(
                       fname: data[0]["firstName"],
@@ -464,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Text('v2.0.0+2-updated'),
+          Text('v2.2.0+5-TestApp'),
           Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
@@ -486,28 +487,28 @@ class _LoginScreenState extends State<LoginScreen> {
       textAlign: TextAlign.center,
       text: TextSpan(
           text: 'Tanzania  ',
-          style: GoogleFonts.portLligatSans(
-            textStyle: Theme.of(context).textTheme.bodyText1,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Color(0XFF105F01),
+          style: TextStyle(
+            fontFamily: "Port Lligat Slab",
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: const Color(0XFF105F01),
           ),
           children: [
             TextSpan(
               text: 'Forest  ',
-              style: TextStyle(color: Color(0XFF105F01), fontSize: 20),
+              style: TextStyle(color: const Color(0XFF105F01), fontSize: 14.sp),
             ),
             TextSpan(
               text: 'Services  ',
-              style: TextStyle(color: Color(0XFF105F01), fontSize: 20),
+              style: TextStyle(color: const Color(0XFF105F01), fontSize: 14.sp),
             ),
             TextSpan(
               text: 'Agency  ',
-              style: TextStyle(color: Color(0XFF105F01), fontSize: 20),
+              style: TextStyle(color: const Color(0XFF105F01), fontSize: 14.sp),
             ),
             TextSpan(
               text: '(TFS).',
-              style: TextStyle(color: Color(0XFF105F01), fontSize: 20),
+              style: TextStyle(color: const Color(0XFF105F01), fontSize: 14.sp),
             ),
           ]),
     );
@@ -517,21 +518,32 @@ class _LoginScreenState extends State<LoginScreen> {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-          text: 'Honey',
-          style: GoogleFonts.portLligatSans(
-            textStyle: Theme.of(context).textTheme.bodyText1,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: kPrimaryColor,
+          text: ' TFS',
+          style: TextStyle(
+            fontFamily: "Port Lligat Slab",
+            fontSize: 14.sp,
           ),
           children: [
             TextSpan(
+              text: 'Honey',
+              style: TextStyle(
+                  color: Color.fromARGB(255, 251, 231, 10),
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold),
+            ),
+            TextSpan(
               text: 'Track',
-              style: TextStyle(color: Color(0XFF105F01), fontSize: 20),
+              style: TextStyle(
+                  color: kPrimaryColor,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold),
             ),
             TextSpan(
               text: 'App',
-              style: TextStyle(color: Colors.black, fontSize: 20),
+              style: TextStyle(
+                  color: Colors.green[400],
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold),
             ),
           ]),
     );

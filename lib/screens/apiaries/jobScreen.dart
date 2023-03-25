@@ -15,7 +15,7 @@ class JobScreen extends StatelessWidget {
         backgroundColor: kPrimaryColor,
         title: Text(
           "Task/Jobs",
-          style: TextStyle(fontFamily: 'Ubuntu', color: Colors.black),
+          //style: TextStyle(fontFamily: 'Ubuntu', color: Colors.black),
         ),
       ),
       body: InspectionJobs(

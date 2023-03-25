@@ -39,7 +39,7 @@ class _HarvestingListState extends State<HarvestingList> {
     print(x);
     setState(() {
       list = x;
-    
+
       isLoading = false;
     });
   }
@@ -263,7 +263,7 @@ class _HarvestingListState extends State<HarvestingList> {
                     color: Colors.green,
                   ),
                   title: new Text('Other Bee Product: ' +
-                      list![index]["other_bee_product"].toString()),
+                      list![index]["bee_products"].toString()),
                   onTap: () {},
                 ),
 
@@ -276,7 +276,7 @@ class _HarvestingListState extends State<HarvestingList> {
                     color: Colors.green,
                   ),
                   title: new Text('Transportation Means: ' +
-                      list![index]["transportation_means"].toString()),
+                      list![index]["transport_mean"].toString()),
                   onTap: () {
                     // Navigator.pop(context);
                     // Navigator.pushNamed(
@@ -292,7 +292,7 @@ class _HarvestingListState extends State<HarvestingList> {
                     color: Colors.green,
                   ),
                   title: new Text('Transportation Time: ' +
-                      list![index]["transportation_time"].toString()),
+                      list![index]["transport_time"].toString()),
                   onTap: () {
                     // Navigator.pop(context);
                     // Navigator.pushNamed(

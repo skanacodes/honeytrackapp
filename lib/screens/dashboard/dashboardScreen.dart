@@ -1,7 +1,11 @@
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
+import 'dart:convert';
+import 'package:honeytrackapp/providers/apiary_jobs_inserts.dart';
+import 'package:honeytrackapp/providers/jobApiProviders.dart';
+import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:honeytrackapp/providers/db_provider.dart';
@@ -45,48 +49,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   String fname = "";
   String checkpointName = "";
   int sum = 0;
-  // CountdownTimer _countDownTimer;
-  Future<void> didChangeAppLifeCycleState(AppLifecycleState state) async {
-    print("AppLifeCycleState:::: $state");
-    if (state == AppLifecycleState.inactive) {
-    } else if (state == AppLifecycleState.resumed) {
-    } else {
-      print("SSD");
-    }
-  }
-
-  Timer? _timer;
-  // start/restart timer
-  void _initializeTimer() {
-    print("jdsjdsj djds");
-    if (_timer != null) {
-      _timer!.cancel();
-    }
-    // setup action after 5 minutes
-    _timer = Timer(const Duration(minutes: 1), () => _handleInactivity());
-  }
-
-  void _handleInactivity() {
-    _timer?.cancel();
-    _timer = null;
-
-    // ignore: todo
-    // TODO: type your desired code here
-    // Navigator.of(context)
-    //     .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
-    //  alert();
-  }
-
-  alert() {
-    return Alert(
-      onWillPopActive: true,
-
-      context: context,
-      title: "RFLUTTER ALERT",
-      desc: "Flutter is better with RFlutter Alert.",
-      // image: Image.asset("assets/logo.png"),
-    ).show();
-  }
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   Widget list(String title, String subtitle) {
     return Card(
@@ -134,19 +99,187 @@ class _DashboardScreenState extends State<DashboardScreen>
     });
   }
 
+  Future getJobs() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      var tokens = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getString('token'));
+      var userId = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getInt('user_id'));
+      print(userId.toString() + "vdsghfcdvsygvc gdysvcgdvcgsd ysvc ds ");
+      var headers = {"Authorization": "Bearer ${tokens!}"};
+      var url;
+      url = Uri.parse('$baseUrl/api/v1/get-tasks');
+      final response = await http.get(url, headers: headers);
+      int len = 0;
+      var res;
+      var tasks;
+      print(response.statusCode);
+      print(response.body);
+      switch (response.statusCode) {
+        case 200:
+          setState(() {
+            res = json.decode(response.body);
+            print(res);
+            tasks = res["data"];
+            len = res["data"].length;
+          });
+          for (var i = 0; i < len; i++) {
+            if (tasks[i] == null) {
+              print("Null Task");
+            } else {
+              print(tasks[i]["activities"].toString());
+              List apiaries = [];
+              List hiveNo = [];
+              List apiariesId = [];
+              String? taskActivityId;
+              print("*********************************");
+              print(tasks[i]);
+              print("*********************************");
+              for (var j = 0; j < tasks[i]["activities"].length; j++) {
+                String? ap;
+                String? ids;
+                String? nohive;
+                // int sum = 0;
+                print("Task two");
+                tasks[i]["activities"][j]["apiary"] != null
+                    ? ap = tasks[i]["activities"][j]["apiary"]["name"]
+                    : ap = '';
+                tasks[i]["activities"][j]["apiary"] != null
+                    ? ids = tasks[i]["activities"][j]["apiary"]["id"].toString()
+                    : ids = '';
+                nohive = tasks[i]["activities"][j]["hive_number"].toString();
+                taskActivityId = tasks[i]["activities"][j]["id"].toString();
+                print("Task Three");
+                // sum = sum +
+                //     int.parse(
+                //         tasks[i]["tasks"]["activities"][j]["hive_number"]);
+                //print(sum);
+                apiaries.add(ap);
+                apiariesId.add(ids);
+                hiveNo.add(nohive);
+              }
+              print(taskActivityId);
+              // print()
+              tasks[i]["activities"].length == 0
+                  ? print("ignore")
+                  : await storeJobs(
+                      userId.toString(),
+                      tasks[i]["id"].toString(),
+                      tasks[i]["name"],
+                      tasks[i]["task_type"]["name"],
+                      apiaries.toString(),
+                      apiariesId.toString(),
+                      hiveNo.toString(),
+                      taskActivityId!,
+                      tasks[i]["name"]);
+            }
+          }
+
+          break;
+
+        default:
+          setState(() {
+            res = json.decode(response.body);
+          });
+
+          break;
+      }
+    } catch (e) {
+      setState(() {});
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> storeJobs(
+    String personId,
+    String id,
+    String jobname,
+    String tasktype,
+    String activities,
+    String ids,
+    String hiveno,
+    String taskActivityId,
+    String role,
+  ) async {
+    print("ns fjsdfsd");
+    print(personId);
+    print(id +
+        jobname +
+        tasktype +
+        activities +
+        ids +
+        hiveno +
+        taskActivityId +
+        role);
+    await JobsApiProvider.storeJob(
+      personId,
+      id,
+      activities,
+      jobname,
+      tasktype,
+      ids,
+      hiveno,
+      taskActivityId,
+      role,
+    );
+  }
+
+  Future<void> checkNetwork() async {
+    print(_connectionStatus);
+
+    if (_connectionStatus == ConnectivityResult.mobile) {
+      await getJobs();
+    } else if (_connectionStatus == ConnectivityResult.wifi) {
+      await getJobs();
+    } else {
+      //getJobsOffline();
+    }
+  }
+
   @override
   void initState() {
-    // dataMap = {
-    //   "beekepers ": double.parse('78'),
-    //   "apiaries ": double.parse('90'),
-    //   "dealers": double.parse('97'),
-    //   "transitPass": double.parse('89'),
-    // };
-    // this._initializeTimer();
     this.data1();
+    // getInvJobs();
+    initConnectivity();
+
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    Future.delayed(const Duration(seconds: 1)).then((value) => checkNetwork());
     // ignore: todo
     // TODO: implement initState
     super.initState();
+  }
+
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      //developer.log('Couldn\'t check connectivity status', error: e);
+      return;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result;
+      print(_connectionStatus);
+    });
   }
 
   @override
@@ -154,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     //final User arguments = ModalRoute.of(context).settings.arguments;
     var args = ModalRoute.of(context)!.settings.arguments as User;
 
-    print(args);
+    //print(args);
     return Scaffold(
         drawer: CustomDrawer(),
         appBar: AppBar(

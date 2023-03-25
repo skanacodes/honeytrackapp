@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 boxBackgroundColor: Colors.white,
                 textStyle: TextStyle(
                   fontSize: 30.0,
-                  fontFamily: 'Ubuntu',
+                  fontFamily: 'Port Lligat Slab',
                   fontWeight: FontWeight.bold,
                 ),
                 boxHeight: 150.0,

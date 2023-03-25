@@ -128,6 +128,7 @@ class _PermittListState extends State<PermittList> {
       var res;
       //final sharedP prefs=await
       print(response.statusCode);
+      print(response.body);
       switch (response.statusCode) {
         case 200:
           setState(() {

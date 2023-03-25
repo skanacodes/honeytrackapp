@@ -1,5 +1,6 @@
 import 'package:honeytrackapp/modals/harvesting_modal.dart';
 import 'package:honeytrackapp/modals/inspection_modal.dart';
+import 'package:honeytrackapp/modals/job_modals.dart';
 
 import 'package:honeytrackapp/modals/user_modal.dart';
 import 'package:sqflite/sqflite.dart';
@@ -47,7 +48,7 @@ class DBProvider {
           ')');
 
       await db.execute('CREATE TABLE Jobs('
-          'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+          'id INTEGER PRIMARY KEY,'
           'person_id TEXT,'
           'job_id TEXT,'
           'jobname TEXT,'
@@ -75,55 +76,62 @@ class DBProvider {
       await db.execute('CREATE TABLE Inspections('
           'id INTEGER PRIMARY KEY AUTOINCREMENT,'
           'person_id TEXT,'
+          'job_id TEXT,'
           'task_activity_id TEXT,'
           'inspection_season TEXT,'
           'general_condition TEXT,'
           'hive_code TEXT,'
           'colonization_date TEXT,'
           'observations TEXT,'
-          'specify_observation TEXT,'
+          'other_observations TEXT,'
           'action_taken TEXT,'
-          'specify_action TEXT,'
+          'other_action_taken TEXT,'
           'blooming_species TEXT,'
-          'expected_for_harvest TEXT,'
+          'harvest_expected TEXT,'
           'expected_harvest_kg TEXT,'
           'apiary_id TEXT,'
           'apiary_name TEXT,'
           'img1 TEXT,'
           'img2 TEXT,'
           'inserting_way TEXT,'
+          'is_complete TEXT,'
+          'file1 TEXT,'
+          'file2 TEXT,'
           'upload_status TEXT'
           ')');
+      //           'apiary_name': apiarName,
+      // 'apiary_id': apiaryIds,
+      // 'hive_code': _qrInfo,
+      // 'equipment_used': equipmentUsed!.join(","),
+      // 'bee_products': beeProducts,
+      // 'transport_mean': transportationMeans!.join(","),
+      // 'transport_time': timeController.text,
+      // 'harvesting_cost': harvestingCost,
+      // 'task_activity_id': widget.taskId,
+      // 'is_complete': hiveAttended == int.parse(hiveTotal![0]) ? true : false,
       await db.execute('CREATE TABLE Harvesting('
           'id INTEGER PRIMARY KEY AUTOINCREMENT,'
           'person_id TEXT,'
           'job_id TEXT,'
           'apiary_name TEXT,'
+          'apiary_id TEXT,'
           'hive_code TEXT,'
           'no_of_hives TEXT,'
-          'weight_of_comb_honey TEXT,'
+          'bee_products TEXT,'
           'moisture_content TEXT,'
           'weather_condition TEXT,'
           'equipment_used TEXT,'
-          'other_bee_product TEXT,'
-          'beevenom_weight TEXT,'
-          'pollenweight TEXT,'
-          'propolisweight TEXT,'
-          'royaljelly_weight TEXT,'
-          'transportation_means TEXT,'
+          'transport_mean TEXT,'
           'otherMeans TEXT,'
-          'transportation_time TEXT,'
-          'stationapiary TEXT,'
+          'transport_time TEXT,'
           'harvesting_cost INTEGER,'
-          'harvestedby_name TEXT,'
-          'harvestedby_title TEXT,'
-          'harvestedby_date TEXT,'
-          'certifiedby_name TEXT,'
-          'certifiedby_title TEXT,'
-          'certifiedby_date TEXT,'
+          'task_activity_id TEXT,'
+          'is_complete TEXT,'
           'img1 TEXT,'
           'img2 TEXT,'
-          'upload_status TEXT'
+          'upload_status TEXT,'
+          'file1 TEXT,'
+          'file2 TEXT'
           ')');
     });
   }
@@ -166,6 +174,19 @@ class DBProvider {
     return res;
   }
 
+  // Insert InventoryJobsList on database
+  createJobsList(JobModals newJobsList) async {
+    try {
+      //await deleteAllInventoryJobsLists();
+      final db = await database;
+      final res = await db!.insert('Jobs', newJobsList.toJson());
+      //getAllInventoryJobsLists();
+      return res;
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
   Future<String> insertSingleApiaryInspection(InspectionModal inspect) async {
     // Get a reference to the database.
     // print("am in inserting");
@@ -180,6 +201,7 @@ class DBProvider {
       return 'Success';
     } catch (e) {
       print('error while inserting data');
+      print(e.toString());
       return 'failed';
     }
   }
@@ -346,15 +368,75 @@ class DBProvider {
     }
   }
 
-  Future<List<InspectionModal>> getAllTreesDetails() async {
+  Future<List> getInspectionForSyncDetails() async {
     final db = await database;
-    final res = await db!.rawQuery("SELECT * FROM Inspections");
+    final res = await db!
+        .rawQuery("SELECT * FROM Inspections WHERE upload_status=?", ["0"]);
+    print(res);
+    // List<InspectionModal> list = res.isNotEmpty
+    //     ? res.map((c) => InspectionModal.fromJson(c)).toList()
+    //     : [];
 
-    List<InspectionModal> list = res.isNotEmpty
-        ? res.map((c) => InspectionModal.fromJson(c)).toList()
-        : [];
+    return res;
+  }
 
-    return list;
+  Future<List> getHarvestingForSyncDetails() async {
+    final db = await database;
+    final res = await db!
+        .rawQuery("SELECT * FROM Harvesting WHERE upload_status=?", ["0"]);
+    print(res);
+    // List<InspectionModal> list = res.isNotEmpty
+    //     ? res.map((c) => InspectionModal.fromJson(c)).toList()
+    //     : [];
+
+    return res;
+  }
+
+  //// Insert PlotsList after sync
+  updateInspectionList(List data) async {
+    try {
+      // await deletePlotsLists();
+      final db = await database;
+
+      var batch = db!.batch();
+
+      for (var i = 0; i < data.length; i++) {
+        batch = db.batch();
+        batch = db.batch();
+        batch.update('Inspections', {'upload_status': '1'},
+            where: 'id = ?', whereArgs: [data[i]["id"]]);
+      }
+
+      var results = await batch.commit();
+      // print(results.toString() + "sbusubswuwu");
+
+      return "success";
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  updateHarvestList(List data) async {
+    try {
+      // await deletePlotsLists();
+      final db = await database;
+
+      var batch = db!.batch();
+
+      for (var i = 0; i < data.length; i++) {
+        batch = db.batch();
+        batch = db.batch();
+        batch.update('Harvesting', {'upload_status': '1'},
+            where: 'id = ?', whereArgs: [data[i]["id"]]);
+      }
+
+      var results = await batch.commit();
+      // print(results.toString() + "sbusubswuwu");
+
+      return "success";
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   Future<List<User>> getAllUser() async {

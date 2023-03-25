@@ -17,14 +17,16 @@ class InspectionJobs extends StatefulWidget {
 }
 
 class _InspectionJobsState extends State<InspectionJobs> {
-  List? jobs;
+  List? jobs = [];
   List? listApiary;
   bool isLoading = false;
   Future getAllJobs(String id) async {
     setState(() {
       isLoading = true;
     });
+    print(id);
     var res = await DBProvider.db.getJobs(id);
+    print(res);
     setState(() {
       jobs = res;
       isLoading = false;
@@ -51,98 +53,133 @@ class _InspectionJobsState extends State<InspectionJobs> {
                 ? SpinKitCircle(
                     color: kPrimaryColor,
                   )
-                : Container(
-                    height: getProportionateScreenHeight(600),
-                    color: Colors.white,
-                    child: AnimationLimiter(
-                      child: ListView.builder(
-                        //shrinkWrap: true,
-                        itemCount: jobs!.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return AnimationConfiguration.staggeredList(
-                            position: index,
-                            duration: const Duration(milliseconds: 1375),
-                            child: SlideAnimation(
-                              verticalOffset: 50.0,
-                              child: FadeInAnimation(
-                                child: Card(
-                                  elevation: 10,
-                                  shadowColor: Colors.grey,
-                                  child: Container(
-                                    child: ListTile(
-                                      onTap: () {
-                                        print(jobs![index]["hiveNo"]);
-                                        jobs![index]["tasktype"].toString() ==
-                                                "Inspection"
-                                            ? Navigator.pushNamed(
-                                                context,
-                                                InspectionMainScreen.routeName,
-                                                arguments: ScreenArguments(
-                                                    widget.id,
-                                                    jobs![index]["job_id"]
-                                                        .toString(),
-                                                    jobs![index]["jobname"]
-                                                        .toString(),
-                                                    jobs![index]["activity"]
-                                                        .split("[]"),
-                                                    jobs![index]["apiary_id"]
-                                                        .split(
-                                                      "[]",
-                                                    ),
-                                                    jobs![index]["hiveNo"]
-                                                        .split(
-                                                      "[]",
-                                                    ),
-                                                    jobs![index]
-                                                            ["hive_attended"]
-                                                        .toString(),
-                                                    taskId: jobs![index]
-                                                            ["task_activity_id"]
-                                                        .toString()),
-                                              )
-                                            : Navigator.pushNamed(context,
-                                                HarvestingMainScreen.routeName,
-                                                arguments: ScreenArguments(
-                                                    widget.id,
-                                                    jobs![index]["job_id"]
-                                                        .toString(),
-                                                    jobs![index]["jobname"]
-                                                        .toString(),
-                                                    jobs![index]["activity"]
-                                                        .split("[]"),
-                                                    jobs![index]["apiary_id"]
-                                                        .split("[]"),
-                                                    jobs![index]["hiveNo"]
-                                                        .split(
-                                                      "[]",
-                                                    ),
-                                                    jobs![index]
-                                                            ["hive_attended"]
-                                                        .toString(),
-                                                    taskId: jobs![index]
-                                                            ["task_activity_id"]
-                                                        .toString()));
-                                      },
-                                      trailing: Icon(
-                                        Icons.arrow_right,
-                                        color: Colors.cyan,
+                : jobs!.isEmpty
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: SizedBox(
+                            // height: getProportionateScreenHeight(60),
+                            child: Card(
+                              elevation: 10,
+                              child: ListTile(
+                                trailing: Icon(Icons.donut_large_outlined),
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.grey,
+                                  child: Icon(
+                                    Icons.hourglass_empty_outlined,
+                                    color: kPrimaryColor,
+                                  ),
+                                ),
+                                title: Text(
+                                  "No Tasks Found",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                // subtitle: Text(""),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        height: getProportionateScreenHeight(600),
+                        color: Colors.white,
+                        child: AnimationLimiter(
+                          child: ListView.builder(
+                            //shrinkWrap: true,
+                            itemCount: jobs!.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return AnimationConfiguration.staggeredList(
+                                position: index,
+                                duration: const Duration(milliseconds: 1375),
+                                child: SlideAnimation(
+                                  verticalOffset: 50.0,
+                                  child: FadeInAnimation(
+                                    child: Card(
+                                      elevation: 10,
+                                      shadowColor: Colors.grey,
+                                      child: Container(
+                                        child: ListTile(
+                                          onTap: () {
+                                            print(jobs![index]["hiveNo"]);
+                                            jobs![index]["tasktype"]
+                                                        .toString() ==
+                                                    "Inspection"
+                                                ? Navigator.pushNamed(
+                                                    context,
+                                                    InspectionMainScreen
+                                                        .routeName,
+                                                    arguments: ScreenArguments(
+                                                        widget.id,
+                                                        jobs![index]["job_id"]
+                                                            .toString(),
+                                                        jobs![index]["jobname"]
+                                                            .toString(),
+                                                        jobs![index]["activity"]
+                                                            .split("[]"),
+                                                        jobs![index]
+                                                                ["apiary_id"]
+                                                            .split(
+                                                          "[]",
+                                                        ),
+                                                        jobs![index]["hiveNo"]
+                                                            .split(
+                                                          "[]",
+                                                        ),
+                                                        jobs![index][
+                                                                "hive_attended"]
+                                                            .toString(),
+                                                        taskId: jobs![index][
+                                                                "task_activity_id"]
+                                                            .toString()),
+                                                  )
+                                                : Navigator.pushNamed(
+                                                    context,
+                                                    HarvestingMainScreen
+                                                        .routeName,
+                                                    arguments: ScreenArguments(
+                                                        widget.id,
+                                                        jobs![index]["job_id"]
+                                                            .toString(),
+                                                        jobs![index]["jobname"]
+                                                            .toString(),
+                                                        jobs![index]["activity"]
+                                                            .split("[]"),
+                                                        jobs![index]
+                                                                ["apiary_id"]
+                                                            .split("[]"),
+                                                        jobs![index]["hiveNo"]
+                                                            .split(
+                                                          "[]",
+                                                        ),
+                                                        jobs![index][
+                                                                "hive_attended"]
+                                                            .toString(),
+                                                        taskId: jobs![index][
+                                                                "task_activity_id"]
+                                                            .toString()));
+                                          },
+                                          trailing: Icon(
+                                            Icons.arrow_right,
+                                            color: Colors.cyan,
+                                          ),
+                                          leading: CircleAvatar(
+                                              child: Text('${index + 1}')),
+                                          title: Text("Task Name: " +
+                                              jobs![index]["jobname"]
+                                                  .toString()),
+                                          subtitle: Text('Task-Type: ' +
+                                              jobs![index]["tasktype"]
+                                                  .toString()),
+                                        ),
                                       ),
-                                      leading: CircleAvatar(
-                                          child: Text('${index + 1}')),
-                                      title: Text("Task Name: " +
-                                          jobs![index]["jobname"].toString()),
-                                      subtitle: Text('Task-Type: ' +
-                                          jobs![index]["tasktype"].toString()),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ),
         ],
       ),

@@ -37,7 +37,7 @@ class _InspectionMainScreenState extends State<InspectionMainScreen> {
         backgroundColor: kPrimaryColor,
         title: Text(
           'Apiaries Inspection',
-          style: TextStyle(color: Colors.black, fontFamily: 'ubuntu'),
+         // style: TextStyle(color: Colors.black, fontFamily: 'ubuntu'),
         ),
       ),
       body: SizedBox.expand(
