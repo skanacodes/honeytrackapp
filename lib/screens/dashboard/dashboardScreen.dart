@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:honeytrackapp/providers/apiary_jobs_inserts.dart';
 import 'package:honeytrackapp/providers/jobApiProviders.dart';
+import 'package:honeytrackapp/screens/management/managementScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -356,100 +357,110 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
               ),
-              ImageSlider(),
-              Align(
-                  alignment: Alignment.bottomCenter,
-                  child: DashboardUiComponents(
-                    role: roles,
-                    apiaries: apiari,
-                    dealers: dealer,
-                    id: args.id,
-                  )),
-              Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: Container(
-                  //  height: getProportionateScreenHeight(400),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Card(
-                      elevation: 10,
-                      // shadowColor: kPrimaryColor,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                left: 10, right: 10, top: 10, bottom: 0),
-                            child: Text(
-                              'Summary Of The Honey TraceAbility Operations',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(0.0),
-                            child: Center(
-                              child: Text(
-                                '',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                          isLoadingCharts
-                              ? SpinKitCircle(
-                                  color: kPrimaryColor,
-                                )
-                              : Padding(
+              args.fname != "null" ? Container() : ImageSlider(),
+              args.fname != "null"
+                  ? ManagementScreen()
+                  : Align(
+                      alignment: Alignment.bottomCenter,
+                      child: DashboardUiComponents(
+                        role: roles,
+                        apiaries: apiari,
+                        dealers: dealer,
+                        id: args.id,
+                      )),
+              args.fname != "null"
+                  ? Container()
+                  : Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        //  height: getProportionateScreenHeight(400),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Card(
+                            elevation: 10,
+                            // shadowColor: kPrimaryColor,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Padding(
                                   padding: const EdgeInsets.only(
-                                      bottom: 10, left: 8, right: 8, top: 2),
-                                  child: Card(
-                                    elevation: 10,
-                                    child: PieChart(
-                                      dataMap: dataMap,
-                                      // emptyColor: Colors.amber,
-                                      animationDuration:
-                                          Duration(milliseconds: 1800),
-                                      chartLegendSpacing: 32,
-                                      chartRadius:
-                                          MediaQuery.of(context).size.width /
-                                              3.2,
-                                      colorList: [
-                                        Colors.blue,
-                                        kPrimaryColor,
-                                        Colors.pink,
-                                        Colors.cyan
-                                      ],
-                                      initialAngleInDegree: 70,
-                                      chartType: ChartType.ring,
-
-                                      ringStrokeWidth: 45,
-                                      centerText: "stats",
-                                      legendOptions: LegendOptions(
-                                        showLegendsInRow: false,
-                                        legendPosition: LegendPosition.right,
-                                        showLegends: true,
-                                        legendShape: BoxShape.circle,
-                                        legendTextStyle: TextStyle(
-                                            fontWeight: FontWeight.normal,
-                                            color: Colors.black),
-                                      ),
-
-                                      chartValuesOptions: ChartValuesOptions(
-                                        showChartValueBackground: true,
-                                        showChartValues: true,
-                                        showChartValuesInPercentage: true,
-                                        showChartValuesOutside: true,
-                                      ),
+                                      left: 10, right: 10, top: 10, bottom: 0),
+                                  child: Text(
+                                    'Summary Of The Honey TraceAbility Operations',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(0.0),
+                                  child: Center(
+                                    child: Text(
+                                      '',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
-                        ],
+                                isLoadingCharts
+                                    ? SpinKitCircle(
+                                        color: kPrimaryColor,
+                                      )
+                                    : Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 10,
+                                            left: 8,
+                                            right: 8,
+                                            top: 2),
+                                        child: Card(
+                                          elevation: 10,
+                                          child: PieChart(
+                                            dataMap: dataMap,
+                                            // emptyColor: Colors.amber,
+                                            animationDuration:
+                                                Duration(milliseconds: 1800),
+                                            chartLegendSpacing: 32,
+                                            chartRadius: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                3.2,
+                                            colorList: [
+                                              Colors.blue,
+                                              kPrimaryColor,
+                                              Colors.pink,
+                                              Colors.cyan
+                                            ],
+                                            initialAngleInDegree: 70,
+                                            chartType: ChartType.ring,
+
+                                            ringStrokeWidth: 45,
+                                            centerText: "stats",
+                                            legendOptions: LegendOptions(
+                                              showLegendsInRow: false,
+                                              legendPosition:
+                                                  LegendPosition.right,
+                                              showLegends: true,
+                                              legendShape: BoxShape.circle,
+                                              legendTextStyle: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.black),
+                                            ),
+
+                                            chartValuesOptions:
+                                                ChartValuesOptions(
+                                              showChartValueBackground: true,
+                                              showChartValues: true,
+                                              showChartValuesInPercentage: true,
+                                              showChartValuesOutside: true,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
             ]),
           ),
         ));

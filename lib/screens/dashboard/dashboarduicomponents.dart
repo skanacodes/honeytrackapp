@@ -1,7 +1,7 @@
 // import 'package:fremisAppV2/screens/RejectedTp/rejectedTpScreen.dart';
 // import 'package:fremisAppV2/screens/statistics/statisticsScreen.dart';
 // import 'package:fremisAppV2/screens/verifiedTpScreen/verifiedTpScreen.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as b;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:honeytrackapp/providers/db_provider.dart';
 
@@ -59,9 +59,9 @@ class _DashboardUiComponentsState extends State<DashboardUiComponents> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Badge(
+                child: b.Badge(
                   badgeColor: kPrimaryLightColor,
-                  animationType: BadgeAnimationType.slide,
+                  animationType: b.BadgeAnimationType.slide,
                   padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   badgeContent: Padding(
                     padding: const EdgeInsets.all(1.0),

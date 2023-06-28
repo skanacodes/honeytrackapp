@@ -34,6 +34,7 @@ class _ExportFormState extends State<ExportForm> {
   String quantity = '';
   String waterContent = '';
   String? packingMaterials;
+  String? modeling;
   String value = '';
   String? color;
   String destinationCountry = '';
@@ -63,11 +64,19 @@ class _ExportFormState extends State<ExportForm> {
   // final _formKey1 = GlobalKey<FormState>();
   List? beeProduct;
   String? ask1;
+  String? currency1;
   List<String> ask = [
     'Yes',
     'No',
   ];
 
+  List<String> currency = ['USD', 'EURO', 'TZS'];
+
+  List<String> ModelingBeeWax = [
+    'Uniform Blocks',
+    ' Uniform Pallets',
+    'Uniform Parcel'
+  ];
   List<String> colorList = [
     'Water white',
     'Extra white',
@@ -76,6 +85,11 @@ class _ExportFormState extends State<ExportForm> {
     'Light Amber',
     'Amber',
     'Dark Amber',
+  ];
+  List<String> packagingBeeWax = [
+    'Hessian Cloth',
+    'Guny Bags',
+    'Polythene Bags',
   ];
   List<String> packaging = [
     'Stainless Steel Drums',
@@ -88,6 +102,10 @@ class _ExportFormState extends State<ExportForm> {
     'Plastic bottles',
     'Glass bottles',
     'Lacquered Drums'
+  ];
+  List<String> packagingMaterialOther = [
+    'Glass jar',
+    'Food grade Plastic bottle',
   ];
   String img1 = '';
   String img2 = '';
@@ -299,12 +317,12 @@ class _ExportFormState extends State<ExportForm> {
       var dio = Dio(options);
       var formData = FormData.fromMap({
         'id': jobId,
-        'water_content': waterContent,
-        'packing_materials': packingMaterials ?? '',
-        'value': value,
-        'color': color,
-        'is_commercial': _radioValue == 0 ? true : false,
-        'is_charged': _radioValue1 == 0 ? true : false,
+        'water_content': waterContent.toLowerCase(),
+        'packing_materials': packingMaterials.toString(),
+        'beeswax_modeling': modeling.toString(),
+        'currency': currency1.toString(),
+        'value': value.toString(),
+        'color': color.toString(),
         'consignment_image[]': [
           await MultipartFile.fromFile(
             img1,
@@ -315,8 +333,8 @@ class _ExportFormState extends State<ExportForm> {
             filename: 'images',
           ),
         ],
-        'inspected_by': userId,
-        'physical_hygiene': physicalHygiene
+        'inspected_by': userId.toString(),
+        'physical_hygiene': physicalHygiene.toString()
       });
 
       var response = await dio.post('$baseUrl/api/v1/exp-inspection/update',
@@ -357,7 +375,7 @@ class _ExportFormState extends State<ExportForm> {
 
         message('error', 'Failed To Get Response From Server.');
         // throw Exception('Server Can Not Be Reached');
-        print(e);
+        print(e.message);
         setState(() {
           isLoading = false;
         });
@@ -431,6 +449,8 @@ class _ExportFormState extends State<ExportForm> {
             packingMaterials = null;
             color = null;
             ask1 = null;
+            currency1 = null;
+            modeling = null;
             setState(() {
               print(x);
               isImageTaken = false;
@@ -479,12 +499,12 @@ class _ExportFormState extends State<ExportForm> {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments;
     print(args.jobId);
-    print(args.personId);
+    print(args.productType);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: kPrimaryColor,
         title: Text(
-          'Export Inspection Form',
+          'Export ${args.productType} Inspection Form',
           style: TextStyle(
               fontFamily: 'Ubuntu', color: Colors.black, fontSize: 17),
         ),
@@ -533,7 +553,11 @@ class _ExportFormState extends State<ExportForm> {
                     ),
                   ),
                   // Adding the form here
-                  forms(args.jobId, args.personId)
+                  args.productType == "Beeswax"
+                      ? formBeeWax(args.jobId, args.personId)
+                      : args.productType == "Honey"
+                          ? forms(args.jobId, args.personId)
+                          : formRoyalJell(args.jobId, args.personId)
                 ],
               ),
             ),
@@ -543,6 +567,7 @@ class _ExportFormState extends State<ExportForm> {
     );
   }
 
+//Honey Form
   forms(id, userId) {
     return
         // Adding the form here
@@ -737,31 +762,107 @@ class _ExportFormState extends State<ExportForm> {
                         : Container(),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 10, right: 16, left: 16),
-                      child: Container(
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
-                          key: Key("val"),
-                          onSaved: (val) => value = val!,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                color: Colors.cyan,
+                          const EdgeInsets.only(top: 1, right: 16, left: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.0),
+                              child: TextFormField(
+                                keyboardType: TextInputType.number,
+                                key: Key("val"),
+                                onSaved: (val) => value = val!,
+                                decoration: InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  fillColor: Color(0xfff3f3f4),
+                                  filled: true,
+                                  labelText: "Consignment Value",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding:
+                                      EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                ),
+                                validator: (value) {
+                                  if (value!.isEmpty)
+                                    return "This Field Is Required";
+                                  return null;
+                                },
                               ),
                             ),
-                            fillColor: Color(0xfff3f3f4),
-                            filled: true,
-                            labelText: "Consignment Value",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
                           ),
-                          validator: (value) {
-                            if (value!.isEmpty) return "This Field Is Required";
-                            return null;
-                          },
-                        ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: SafeArea(
+                              child: DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: const BorderSide(
+                                        color: Colors.cyan,
+                                      ),
+                                    ),
+                                    fillColor: const Color(0xfff3f3f4),
+                                    filled: true,
+                                    isDense: true,
+                                    enabled: true,
+                                    contentPadding:
+                                        const EdgeInsets.fromLTRB(30, 5, 15, 5),
+                                    labelText: "Currency",
+                                    border: InputBorder.none),
+                                isExpanded: true,
+                                value: currency1,
+                                style: const TextStyle(
+                                    color: Colors.white, fontFamily: 'Ubuntu'),
+
+                                //elevation: 5,
+                                //style: TextStyle(color: Colors.white),
+
+                                items: currency.map<DropdownMenuItem<String>>(
+                                    (String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xfff3f3f4),
+                                        border: Border(
+                                          bottom: BorderSide(
+                                              width: 1, color: kPrimaryColor),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        value.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                validator: (value) {
+                                  if (value == null) {
+                                    return "This Field is required";
+                                  }
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    currency1 = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(
@@ -865,83 +966,1032 @@ class _ExportFormState extends State<ExportForm> {
                     SizedBox(
                       height: getProportionateScreenHeight(10),
                     ),
-                    Card(
-                      elevation: 6,
-                      child: Column(
+                    // Card(
+                    //   elevation: 6,
+                    //   child: Column(
+                    //     children: [
+                    //       Padding(
+                    //         padding: const EdgeInsets.all(3.0),
+                    //         child: Center(child: Text('Is Permit Commercial')),
+                    //       ),
+                    //       new Row(
+                    //           mainAxisAlignment: MainAxisAlignment.center,
+                    //           children: [
+                    //             new Radio(
+                    //               value: 0,
+                    //               groupValue: _radioValue,
+                    //               onChanged: (value) {
+                    //                 _handleRadioValueChange(value);
+                    //               },
+                    //             ),
+                    //             new Text(
+                    //               'Yes',
+                    //               style: new TextStyle(fontSize: 16.0),
+                    //             ),
+                    //             new Radio(
+                    //               value: 1,
+                    //               groupValue: _radioValue,
+                    //               onChanged: (value) {
+                    //                 _handleRadioValueChange(value);
+                    //               },
+                    //             ),
+                    //             new Text(
+                    //               'No',
+                    //               style: new TextStyle(
+                    //                 fontSize: 16.0,
+                    //               ),
+                    //             ),
+                    //           ]),
+                    //     ],
+                    //   ),
+                    // ),
+                    // Card(
+                    //   elevation: 6,
+                    //   child: Column(
+                    //     children: [
+                    //       Padding(
+                    //         padding: const EdgeInsets.all(3.0),
+                    //         child: Center(child: Text('Is Permit Charged ?')),
+                    //       ),
+                    //       new Row(
+                    //           mainAxisAlignment: MainAxisAlignment.center,
+                    //           children: [
+                    //             new Radio(
+                    //               value: 0,
+                    //               groupValue: _radioValue1,
+                    //               onChanged: (value) {
+                    //                 _handleRadioValueChange1(value);
+                    //               },
+                    //             ),
+                    //             new Text(
+                    //               'Yes',
+                    //               style: new TextStyle(fontSize: 16.0),
+                    //             ),
+                    //             new Radio(
+                    //               value: 1,
+                    //               groupValue: _radioValue1,
+                    //               onChanged: (value) {
+                    //                 _handleRadioValueChange1(value);
+                    //               },
+                    //             ),
+                    //             new Text(
+                    //               'No',
+                    //               style: new TextStyle(
+                    //                 fontSize: 16.0,
+                    //               ),
+                    //             ),
+                    //           ]),
+                    //     ],
+                    //   ),
+                    // ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: getProportionateScreenHeight(60),
+                      child: Card(
+                        elevation: 10,
+                        child: Center(
+                          child: Text(
+                              "Click On The Icons To Take Atleast Two Pictures"),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: getProportionateScreenHeight(200),
+                      width: double.infinity,
+                      child: Row(
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: Center(child: Text('Is Permit Commercial')),
-                          ),
-                          new Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                new Radio(
-                                  value: 0,
-                                  groupValue: _radioValue,
-                                  onChanged: (value) {
-                                    _handleRadioValueChange(value);
-                                  },
-                                ),
-                                new Text(
-                                  'Yes',
-                                  style: new TextStyle(fontSize: 16.0),
-                                ),
-                                new Radio(
-                                  value: 1,
-                                  groupValue: _radioValue,
-                                  onChanged: (value) {
-                                    _handleRadioValueChange(value);
-                                  },
-                                ),
-                                new Text(
-                                  'No',
-                                  style: new TextStyle(
-                                    fontSize: 16.0,
+                          isImageTaken
+                              ? Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(1);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: Center(
+                                          child: FutureBuilder<void>(
+                                        future: retriveLostData(_imageFile),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<void> snapshot) {
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.none:
+                                            case ConnectionState.waiting:
+                                              return const Text(
+                                                  'Picked an image');
+                                            case ConnectionState.done:
+                                              return _previewImage(_imageFile);
+                                            default:
+                                              return const Text(
+                                                  'Picked an image');
+                                          }
+                                        },
+                                      )),
+                                    ),
+                                  ),
+                                )
+                              : Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(1);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: SvgPicture.asset(
+                                        "assets/icons/addpic.svg",
+                                        // height: 4.h,
+                                        // width: 4.w,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ]),
+                          isImageTaken1
+                              ? Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(2);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: Center(
+                                          child: FutureBuilder<void>(
+                                        future: retriveLostData(_imageFile1),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<void> snapshot) {
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.none:
+                                            case ConnectionState.waiting:
+                                              return const Text(
+                                                  'Picked an image');
+                                            case ConnectionState.done:
+                                              return _previewImage(_imageFile1);
+                                            default:
+                                              return const Text(
+                                                  'Picked an image');
+                                          }
+                                        },
+                                      )),
+                                    ),
+                                  ),
+                                )
+                              : Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(2);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: SvgPicture.asset(
+                                        "assets/icons/addpic.svg",
+                                        // height: 4.h,
+                                        // width: 4.w,
+                                      ),
+                                    ),
+                                  ),
+                                )
                         ],
                       ),
                     ),
-                    Card(
-                      elevation: 6,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: Center(child: Text('Is Permit Charged ?')),
-                          ),
-                          new Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                new Radio(
-                                  value: 0,
-                                  groupValue: _radioValue1,
-                                  onChanged: (value) {
-                                    _handleRadioValueChange1(value);
-                                  },
-                                ),
-                                new Text(
-                                  'Yes',
-                                  style: new TextStyle(fontSize: 16.0),
-                                ),
-                                new Radio(
-                                  value: 1,
-                                  groupValue: _radioValue1,
-                                  onChanged: (value) {
-                                    _handleRadioValueChange1(value);
-                                  },
-                                ),
-                                new Text(
-                                  'No',
-                                  style: new TextStyle(
-                                    fontSize: 16.0,
+                    isImageTaken == false || isImageTaken1 == false
+                        ? Card(
+                            elevation: 10,
+                            child: Center(
+                              child: Text(
+                                imageErr.toString(),
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: _submitButton(id, userId),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(30),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  formBeeWax(id, userId) {
+    return
+        // Adding the form here
+        Form(
+      key: _formKey,
+      child: Expanded(
+        child: ListView(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Card(
+                elevation: 10,
+                shadowColor: kPrimaryColor,
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    SafeArea(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.only(top: 1, right: 16, left: 16),
+                        child: Container(
+                          // width: getProportionateScreenHeight(
+                          //     320),
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.cyan,
                                   ),
                                 ),
-                              ]),
+                                fillColor: const Color(0xfff3f3f4),
+                                filled: true,
+                                isDense: true,
+                                enabled: true,
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                labelText: "Is Proper Packaging Material ?",
+                                border: InputBorder.none),
+                            isExpanded: true,
+                            value: ask1,
+                            style: const TextStyle(
+                                color: Colors.white, fontFamily: 'Ubuntu'),
+
+                            //elevation: 5,
+                            //style: TextStyle(color: Colors.white),
+
+                            items: ask
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xfff3f3f4),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: kPrimaryColor),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            validator: (value) {
+                              if (value == null) {
+                                return "This Field is required";
+                              }
+                            },
+                            onChanged: (value) {
+                              setState(() {
+                                FocusScope.of(context)
+                                    .requestFocus(new FocusNode());
+                                ask1 = value!;
+                                ask1 == "Yes"
+                                    ? showPackagingMaterial = true
+                                    : showPackagingMaterial = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    showPackagingMaterial
+                        ? SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 1, right: 16, left: 16),
+                              child: Container(
+                                // width: getProportionateScreenHeight(
+                                //     320),
+                                child: DropdownButtonFormField<String>(
+                                  decoration: InputDecoration(
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                        borderSide: const BorderSide(
+                                          color: Colors.cyan,
+                                        ),
+                                      ),
+                                      fillColor: const Color(0xfff3f3f4),
+                                      filled: true,
+                                      isDense: true,
+                                      enabled: true,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                          30, 10, 15, 10),
+                                      labelText: "Select Packaging Material",
+                                      border: InputBorder.none),
+                                  isExpanded: true,
+                                  value: packingMaterials,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Ubuntu'),
+                                  //elevation: 5,
+
+                                  iconEnabledColor: Colors.black,
+                                  items: packagingBeeWax
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Container(
+                                        width: double.infinity,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xfff3f3f4),
+                                          border: Border(
+                                            bottom: BorderSide(
+                                                width: 1, color: kPrimaryColor),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          value.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  validator: (value) {
+                                    if (value == null) {
+                                      return "This Field is required";
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    setState(() {
+                                      packingMaterials = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 1, right: 16, left: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.0),
+                              child: TextFormField(
+                                keyboardType: TextInputType.number,
+                                key: Key("val"),
+                                onSaved: (val) => value = val!,
+                                decoration: InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  fillColor: Color(0xfff3f3f4),
+                                  filled: true,
+                                  labelText: "Consignment Value",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding:
+                                      EdgeInsets.fromLTRB(30, 7, 15, 7),
+                                ),
+                                validator: (value) {
+                                  if (value!.isEmpty)
+                                    return "This Field Is Required";
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: SafeArea(
+                              child: DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: const BorderSide(
+                                        color: Colors.cyan,
+                                      ),
+                                    ),
+                                    fillColor: const Color(0xfff3f3f4),
+                                    filled: true,
+                                    isDense: true,
+                                    enabled: true,
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                        30, 10, 15, 10),
+                                    labelText: "Currency",
+                                    border: InputBorder.none),
+                                isExpanded: true,
+                                value: currency1,
+                                style: const TextStyle(
+                                    color: Colors.white, fontFamily: 'Ubuntu'),
+
+                                //elevation: 5,
+                                //style: TextStyle(color: Colors.white),
+
+                                items: currency.map<DropdownMenuItem<String>>(
+                                    (String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xfff3f3f4),
+                                        border: Border(
+                                          bottom: BorderSide(
+                                              width: 1, color: kPrimaryColor),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        value.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                validator: (value) {
+                                  if (value == null) {
+                                    return "This Field is required";
+                                  }
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    currency1 = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
                         ],
                       ),
+                    ),
+                    SafeArea(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.only(top: 1, right: 16, left: 16),
+                        child: Container(
+                          // width: getProportionateScreenHeight(
+                          //     320),
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.cyan,
+                                  ),
+                                ),
+                                fillColor: const Color(0xfff3f3f4),
+                                filled: true,
+                                isDense: true,
+                                enabled: true,
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                labelText: "Select Beeswax Modeling",
+                                border: InputBorder.none),
+                            isExpanded: true,
+                            value: modeling,
+                            style: const TextStyle(
+                                color: Colors.white, fontFamily: 'Ubuntu'),
+                            //elevation: 5,
+
+                            iconEnabledColor: Colors.black,
+                            items: ModelingBeeWax.map<DropdownMenuItem<String>>(
+                                (String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xfff3f3f4),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: kPrimaryColor),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            validator: (value) {
+                              if (value == null) {
+                                return "This Field is required";
+                              }
+                            },
+                            onChanged: (value) {
+                              FocusScope.of(context)
+                                  .requestFocus(new FocusNode());
+                              setState(() {
+                                modeling = value!;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 10, right: 16, left: 16),
+                      child: Container(
+                        child: TextFormField(
+                          keyboardType: TextInputType.text,
+                          key: Key("hygien"),
+                          onSaved: (val) => physicalHygiene = val!,
+                          decoration: InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Colors.cyan,
+                              ),
+                            ),
+                            fillColor: Color(0xfff3f3f4),
+                            filled: true,
+                            labelText: "Physical Hygien",
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) return "This Field Is Required";
+                            return null;
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: getProportionateScreenHeight(60),
+                      child: Card(
+                        elevation: 10,
+                        child: Center(
+                          child: Text(
+                              "Click On The Icons To Take Atleast Two Pictures"),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: getProportionateScreenHeight(200),
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          isImageTaken
+                              ? Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(1);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: Center(
+                                          child: FutureBuilder<void>(
+                                        future: retriveLostData(_imageFile),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<void> snapshot) {
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.none:
+                                            case ConnectionState.waiting:
+                                              return const Text(
+                                                  'Picked an image');
+                                            case ConnectionState.done:
+                                              return _previewImage(_imageFile);
+                                            default:
+                                              return const Text(
+                                                  'Picked an image');
+                                          }
+                                        },
+                                      )),
+                                    ),
+                                  ),
+                                )
+                              : Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(1);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: SvgPicture.asset(
+                                        "assets/icons/addpic.svg",
+                                        // height: 4.h,
+                                        // width: 4.w,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          isImageTaken1
+                              ? Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(2);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: Center(
+                                          child: FutureBuilder<void>(
+                                        future: retriveLostData(_imageFile1),
+                                        builder: (BuildContext context,
+                                            AsyncSnapshot<void> snapshot) {
+                                          switch (snapshot.connectionState) {
+                                            case ConnectionState.none:
+                                            case ConnectionState.waiting:
+                                              return const Text(
+                                                  'Picked an image');
+                                            case ConnectionState.done:
+                                              return _previewImage(_imageFile1);
+                                            default:
+                                              return const Text(
+                                                  'Picked an image');
+                                          }
+                                        },
+                                      )),
+                                    ),
+                                  ),
+                                )
+                              : Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      _pickImage(2);
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: SvgPicture.asset(
+                                        "assets/icons/addpic.svg",
+                                        // height: 4.h,
+                                        // width: 4.w,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                        ],
+                      ),
+                    ),
+                    isImageTaken == false || isImageTaken1 == false
+                        ? Card(
+                            elevation: 10,
+                            child: Center(
+                              child: Text(
+                                imageErr.toString(),
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: _submitButton(id, userId),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(30),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+//Royal Jelly Form ,Pollen and Propolis
+  formRoyalJell(id, userId) {
+    return
+        // Adding the form here
+        Form(
+      key: _formKey,
+      child: Expanded(
+        child: ListView(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Card(
+                elevation: 10,
+                shadowColor: kPrimaryColor,
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    SafeArea(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.only(top: 1, right: 16, left: 16),
+                        child: Container(
+                          // width: getProportionateScreenHeight(
+                          //     320),
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.cyan,
+                                  ),
+                                ),
+                                fillColor: const Color(0xfff3f3f4),
+                                filled: true,
+                                isDense: true,
+                                enabled: true,
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                labelText: "Is Proper Packaging Material ?",
+                                border: InputBorder.none),
+                            isExpanded: true,
+                            value: ask1,
+                            style: const TextStyle(
+                                color: Colors.white, fontFamily: 'Ubuntu'),
+
+                            //elevation: 5,
+                            //style: TextStyle(color: Colors.white),
+
+                            items: ask
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xfff3f3f4),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                          width: 1, color: kPrimaryColor),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            validator: (value) {
+                              if (value == null) {
+                                return "This Field is required";
+                              }
+                            },
+                            onChanged: (value) {
+                              setState(() {
+                                FocusScope.of(context)
+                                    .requestFocus(new FocusNode());
+                                ask1 = value!;
+                                ask1 == "Yes"
+                                    ? showPackagingMaterial = true
+                                    : showPackagingMaterial = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    showPackagingMaterial
+                        ? SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 1, right: 16, left: 16),
+                              child: Container(
+                                // width: getProportionateScreenHeight(
+                                //     320),
+                                child: DropdownButtonFormField<String>(
+                                  decoration: InputDecoration(
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                        borderSide: const BorderSide(
+                                          color: Colors.cyan,
+                                        ),
+                                      ),
+                                      fillColor: const Color(0xfff3f3f4),
+                                      filled: true,
+                                      isDense: true,
+                                      enabled: true,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                          30, 10, 15, 10),
+                                      labelText: "Select Packaging Material",
+                                      border: InputBorder.none),
+                                  isExpanded: true,
+                                  value: packingMaterials,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'Ubuntu'),
+                                  //elevation: 5,
+
+                                  iconEnabledColor: Colors.black,
+                                  items: packagingMaterialOther
+                                      .map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Container(
+                                        width: double.infinity,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xfff3f3f4),
+                                          border: Border(
+                                            bottom: BorderSide(
+                                                width: 1, color: kPrimaryColor),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          value.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  validator: (value) {
+                                    if (value == null) {
+                                      return "This Field is required";
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    setState(() {
+                                      packingMaterials = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 1, right: 16, left: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.0),
+                              child: TextFormField(
+                                keyboardType: TextInputType.number,
+                                key: Key("val"),
+                                onSaved: (val) => value = val!,
+                                decoration: InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  fillColor: Color(0xfff3f3f4),
+                                  filled: true,
+                                  labelText: "Consignment Value",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding:
+                                      EdgeInsets.fromLTRB(30, 7, 15, 7),
+                                ),
+                                validator: (value) {
+                                  if (value!.isEmpty)
+                                    return "This Field Is Required";
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: SafeArea(
+                              child: DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: const BorderSide(
+                                        color: Colors.cyan,
+                                      ),
+                                    ),
+                                    fillColor: const Color(0xfff3f3f4),
+                                    filled: true,
+                                    isDense: true,
+                                    enabled: true,
+                                    contentPadding:
+                                        const EdgeInsets.fromLTRB(30, 5, 15, 5),
+                                    labelText: "Currency",
+                                    border: InputBorder.none),
+                                isExpanded: true,
+                                value: currency1,
+                                style: const TextStyle(
+                                    color: Colors.white, fontFamily: 'Ubuntu'),
+
+                                //elevation: 5,
+                                //style: TextStyle(color: Colors.white),
+
+                                items: currency.map<DropdownMenuItem<String>>(
+                                    (String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xfff3f3f4),
+                                        border: Border(
+                                          bottom: BorderSide(
+                                              width: 1, color: kPrimaryColor),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        value.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                validator: (value) {
+                                  if (value == null) {
+                                    return "This Field is required";
+                                  }
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    currency1 = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 10, right: 16, left: 16),
+                      child: Container(
+                        child: TextFormField(
+                          keyboardType: TextInputType.text,
+                          key: Key("hygien"),
+                          onSaved: (val) => physicalHygiene = val!,
+                          decoration: InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Colors.cyan,
+                              ),
+                            ),
+                            fillColor: Color(0xfff3f3f4),
+                            filled: true,
+                            labelText: "Physical Hygien",
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) return "This Field Is Required";
+                            return null;
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: getProportionateScreenHeight(10),
                     ),
                     SizedBox(
                       height: getProportionateScreenHeight(10),

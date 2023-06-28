@@ -50,7 +50,9 @@ class _ImportFormState extends State<ImportForm> {
   String distributeChannel = '';
   String evidenceOfStorageFacility = '';
   String expiringDate = '';
+  String? currency1;
 
+  List<String> currency = ['USD', 'EURO', 'TZS'];
   bool isStepOneComplete = false;
   bool isStepTwoComplete = false;
   bool isStepThreeComplete = false;
@@ -229,10 +231,9 @@ class _ImportFormState extends State<ImportForm> {
       var dio = Dio(options);
       var formData = FormData.fromMap({
         'id': jobId,
-        'quantity': quantity,
-        'weight': weight,
         'evidence_of_storage': evidenceOfStorageFacility,
         'consignment_value': value,
+        'currency': currency1,
         'consignment_image[]': [
           await MultipartFile.fromFile(
             img1,
@@ -515,35 +516,35 @@ class _ImportFormState extends State<ImportForm> {
                     //     ),
                     //   ),
                     // ),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 10, right: 16, left: 16),
-                      child: Container(
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
-                          key: Key("water"),
-                          onSaved: (val) => weight = val!,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                color: Colors.cyan,
-                              ),
-                            ),
-                            fillColor: Color(0xfff3f3f4),
-                            filled: true,
-                            labelText: "Weight",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
-                          ),
-                          validator: (value) {
-                            if (value!.isEmpty) return "This Field Is Required";
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding:
+                    //       const EdgeInsets.only(top: 10, right: 16, left: 16),
+                    //   child: Container(
+                    //     child: TextFormField(
+                    //       keyboardType: TextInputType.number,
+                    //       key: Key("water"),
+                    //       onSaved: (val) => weight = val!,
+                    //       decoration: InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //           borderRadius: BorderRadius.circular(10.0),
+                    //           borderSide: BorderSide(
+                    //             color: Colors.cyan,
+                    //           ),
+                    //         ),
+                    //         fillColor: Color(0xfff3f3f4),
+                    //         filled: true,
+                    //         labelText: "Weight",
+                    //         border: InputBorder.none,
+                    //         isDense: true,
+                    //         contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
+                    //       ),
+                    //       validator: (value) {
+                    //         if (value!.isEmpty) return "This Field Is Required";
+                    //         return null;
+                    //       },
+                    //     ),
+                    //   ),
+                    // ),
                     Padding(
                       padding:
                           const EdgeInsets.only(top: 10, right: 16, left: 16),
@@ -575,31 +576,104 @@ class _ImportFormState extends State<ImportForm> {
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 10, right: 16, left: 16),
-                      child: Container(
-                        child: TextFormField(
-                          keyboardType: TextInputType.number,
-                          key: Key("val"),
-                          onSaved: (val) => value = val!,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
-                                color: Colors.cyan,
+                          const EdgeInsets.only(top: 1, right: 16, left: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                keyboardType: TextInputType.number,
+                                key: Key("val"),
+                                onSaved: (val) => value = val!,
+                                decoration: InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  fillColor: Color(0xfff3f3f4),
+                                  filled: true,
+                                  labelText: "Consignment Value",
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding:
+                                      EdgeInsets.fromLTRB(30, 10, 15, 10),
+                                ),
+                                validator: (value) {
+                                  if (value!.isEmpty)
+                                    return "This Field Is Required";
+                                  return null;
+                                },
                               ),
                             ),
-                            fillColor: Color(0xfff3f3f4),
-                            filled: true,
-                            labelText: "Consignment Value",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(30, 10, 15, 10),
                           ),
-                          validator: (value) {
-                            if (value!.isEmpty) return "This Field Is Required";
-                            return null;
-                          },
-                        ),
+                          Expanded(
+                            flex: 4,
+                            child: SafeArea(
+                              child: DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      borderSide: const BorderSide(
+                                        color: Colors.cyan,
+                                      ),
+                                    ),
+                                    fillColor: const Color(0xfff3f3f4),
+                                    filled: true,
+                                    isDense: true,
+                                    enabled: true,
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                        30, 10, 15, 10),
+                                    labelText: "Currency",
+                                    border: InputBorder.none),
+                                isExpanded: true,
+                                value: currency1,
+                                style: const TextStyle(
+                                    color: Colors.white, fontFamily: 'Ubuntu'),
+
+                                //elevation: 5,
+                                //style: TextStyle(color: Colors.white),
+
+                                items: currency.map<DropdownMenuItem<String>>(
+                                    (String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xfff3f3f4),
+                                        border: Border(
+                                          bottom: BorderSide(
+                                              width: 1, color: kPrimaryColor),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        value.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                validator: (value) {
+                                  if (value == null) {
+                                    return "This Field is required";
+                                  }
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    FocusScope.of(context)
+                                        .requestFocus(new FocusNode());
+                                    currency1 = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(

@@ -319,28 +319,16 @@ class _PermittListState extends State<PermittList> {
                                                                 [],
                                                                 [],
                                                                 [],
-                                                                ''))
+                                                                '',
+                                                                productType: data[index]["product_type"]
+                                                                        ["name"]
+                                                                    .toString()))
                                                         : type == 'Import'
-                                                            ? Navigator.pushNamed(context, ImportForm.routeName,
-                                                                arguments: ScreenArguments(
-                                                                    args,
-                                                                    data[index]["id"]
-                                                                        .toString(),
-                                                                    "",
-                                                                    [],
-                                                                    [],
-                                                                    [],
-                                                                    ''))
-                                                            : Navigator.pushNamed(
-                                                                context, InternalMarketForm.routeName,
-                                                                arguments: ScreenArguments(
-                                                                    args,
-                                                                    data[index]["id"].toString(),
-                                                                    "",
-                                                                    [],
-                                                                    [],
-                                                                    [],
-                                                                    ''));
+                                                            ? Navigator.pushNamed(
+                                                                context,
+                                                                ImportForm.routeName,
+                                                                arguments: ScreenArguments(args, data[index]["id"].toString(), "", [], [], [], '', productType: data[index]["product_type"]["name"].toString()))
+                                                            : Navigator.pushNamed(context, InternalMarketForm.routeName, arguments: ScreenArguments(args, data[index]["id"].toString(), "", [], [], [], '', productType: data[index]["product_type"]["name"].toString()));
 
                                                     // data![index]["exit_point"]
                                                     //             .toString() ==
@@ -383,7 +371,7 @@ class _PermittListState extends State<PermittList> {
                                                                   .toString()
                                                           : 'Address:' +
                                                               data[index][
-                                                                      "address"]
+                                                                      "contact_address"]
                                                                   .toString()),
                                                 ),
                                               ),
